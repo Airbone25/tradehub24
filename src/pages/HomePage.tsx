@@ -7,24 +7,34 @@ export function HomePage() {
       {/* Hero Section */}
       <section className="relative bg-[#105298] text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Find Trusted Professionals for Your Home
-            </h1>
-            <p className="text-xl mb-8">
-              Connect with verified local trade professionals for all your home improvement needs
-            </p>
-            <div className="max-w-3xl mx-auto">
-              <div className="flex flex-col md:flex-row gap-4 bg-white rounded-lg p-2">
-                <input
-                  type="text"
-                  placeholder="What service do you need?"
-                  className="flex-grow px-4 py-3 text-gray-900 rounded-md focus:outline-none"
-                />
-                <button className="bg-[#e20000] text-white px-8 py-3 rounded-md hover:bg-[#cc0000] transition-colors">
-                  Find Pros
-                </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-6">
+                Find Trusted Professionals for Your Home
+              </h1>
+              <p className="text-xl mb-8">
+                Connect with verified local trade professionals for all your home improvement needs
+              </p>
+              <div className="max-w-3xl">
+                <div className="flex flex-col md:flex-row gap-4 bg-white rounded-lg p-2">
+                  <input
+                    type="text"
+                    placeholder="What service do you need?"
+                    className="flex-grow px-4 py-3 text-gray-900 rounded-md focus:outline-none"
+                  />
+                  <button className="bg-[#e20000] text-white px-8 py-3 rounded-md hover:bg-[#cc0000] transition-colors">
+                    Find Pros
+                  </button>
+                </div>
               </div>
+            </div>
+            {/* Mascot Image */}
+            <div className="flex justify-center">
+              <img
+                src="https://raw.githubusercontent.com/stackblitz/stackblitz-images/main/tradesperson.png"
+                alt="Friendly Tradesperson"
+                className="w-96"
+              />
             </div>
           </div>
         </div>
