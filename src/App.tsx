@@ -22,7 +22,8 @@ import { MembershipPricing } from './pages/about/MembershipPricing';
 import { HiringGuide } from './pages/homeowner/HiringGuide';
 import { PostJob } from './pages/homeowner/PostJob';
 import { Support } from './pages/homeowner/Support';
-import { Complaints } from './pages/homeowner/Complaints';
+import { ComplaintsHomeowner } from './pages/homeowner/Complaints';
+import { ComplaintsProfessional } from './pages/professional/Complaints';
 import { ProfessionalSupport } from './pages/professional/ProfessionalSupport';
 
 function App() {
@@ -52,8 +53,8 @@ function App() {
           <Route path="/homeowner/hiring-guide" element={<HiringGuide />} />
           <Route path="/homeowner/post-job" element={<PostJob />} />
           <Route path="/homeowner/support" element={<Support />} />
-          <Route path="/homeowner/complaints" element={<Complaints />} />
-          <Route path="/professional/complaint" element={<Complaints />} />
+          <Route path="/homeowner/complaints" element={<ComplaintsHomeowner />} />
+          <Route path="/professional/complaints" element={<ComplaintsProfessional />} />
           <Route path="/professional/professional-support" element={<ProfessionalSupport />} />
         </Routes>
       </Layout>
