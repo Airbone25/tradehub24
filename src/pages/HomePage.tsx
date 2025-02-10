@@ -1,5 +1,7 @@
 import React from 'react';
 import { Search, Shield, Clock, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import man1Image from '../assets/man-1.png';
 
 export function HomePage() {
   return (
@@ -30,11 +32,9 @@ export function HomePage() {
             </div>
             {/* Mascot Image */}
             <div className="flex justify-center">
-              <img
-                src="https://raw.githubusercontent.com/stackblitz/stackblitz-images/main/tradesperson.png"
-                alt="Friendly Tradesperson"
-                className="w-96"
-              />
+              <Link to="/" className="flex-shrink-0 flex items-center space-x-2">
+                <img src={man1Image} alt="Friendly Tradesperson" className="w-96" />
+              </Link>
             </div>
           </div>
         </div>

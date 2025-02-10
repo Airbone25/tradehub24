@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Menu, X, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import logoImage from '../assets/logo-image.png';
+import logoName from '../assets/logo-name.png';
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,9 +13,11 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="text-[#105298] text-xl font-bold">TradeHub24</span>
-            </Link>
+          <Link to="/" className="flex-shrink-0 flex items-center space-x-2">
+            <img src={logoImage} alt="Logo Icon" className="h-12 w-auto" />
+            <img src={logoName} alt="Logo Text" className="h-8 w-auto" />
+          </Link>
+
           </div>
 
           <div className="hidden md:flex items-center space-x-8">
