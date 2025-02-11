@@ -1,13 +1,26 @@
-// components/Navigation.tsx
-import React, { useState } from 'react';
+// src/components/Navigation.tsx
+import React, { useContext, useState } from 'react';
 import { Menu, X, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import logoImage from '../assets/logo-image.png';
 import logoName from '../assets/logo-name.png';
+import { UserTypeContext, UserType } from '../context/UserTypeContext';
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
-  const [userType, setUserType] = useState<'homeowner' | 'professional'>('homeowner');
+  const { userType, setUserType } = useContext(UserTypeContext)!;
+  const navigate = useNavigate();
+
+  const handleUserTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedType = e.target.value as UserType;
+    setUserType(selectedType);
+    // Navigate based on selected type
+    if (selectedType === 'professional') {
+      navigate('/'); // root route will now render ProfessionalHome
+    } else {
+      navigate('/'); // root route will render HomePage for homeowners
+    }
+  };
 
   return (
     <nav className="bg-white shadow-lg">
@@ -37,7 +50,7 @@ export function Navigation() {
             <div className="relative">
               <select 
                 value={userType}
-                onChange={(e) => setUserType(e.target.value as 'homeowner' | 'professional')}
+                onChange={handleUserTypeChange}
                 className="appearance-none bg-white border border-gray-300 rounded-md py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-[#105298]"
               >
                 <option value="homeowner">For Homeowners</option>
