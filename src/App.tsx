@@ -1,3 +1,4 @@
+// App.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
@@ -5,6 +6,7 @@ import { HomePage } from './pages/HomePage';
 import { HowItWorks } from './pages/HowItWorks';
 import { AboutUs } from './pages/AboutUs';
 import { Careers } from './pages/Careers';
+import { FindPros } from './pages/FindPros';
 import { Press } from './pages/Press';
 import { JoinAsPro } from './pages/JoinAsPro';
 import { SuccessStories } from './pages/SuccessStories';
@@ -23,14 +25,19 @@ import { HiringGuide } from './pages/homeowner/HiringGuide';
 import { PostJob } from './pages/homeowner/PostJob';
 import { Support } from './pages/homeowner/Support';
 import { ComplaintsHomeowner } from './pages/homeowner/Complaints';
-import { ComplaintsProfessional } from './pages/professional/Complaints';
+import { Complaints } from './pages/professional/Complaints';
 import { ProfessionalSupport } from './pages/professional/ProfessionalSupport';
+import { ProfessionalHome } from './pages/professional/ProfessionalHome';
+import { ProfessionalRegistration } from './pages/professional/ProfessionalRegistration';
+import { ProfessionalDashboard } from './pages/professional/ProfessionalDashboard';
+import { Services } from './pages/Services';
 
 function App() {
   return (
     <Router>
       <Layout>
         <Routes>
+          {/* Generic routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/about-us" element={<AboutUs />} />
@@ -38,6 +45,7 @@ function App() {
           <Route path="/careers" element={<Careers />} />
           <Route path="/press" element={<Press />} />
           <Route path="/join-as-pro" element={<JoinAsPro />} />
+          <Route path="/find-pros" element={<FindPros />} />
           <Route path="/success-stories" element={<SuccessStories />} />
           <Route path="/pro-resources" element={<ProResources />} />
           <Route path="/pricing" element={<Pricing />} />
@@ -52,9 +60,15 @@ function App() {
           <Route path="/about/membership-pricing" element={<MembershipPricing />} />
           <Route path="/homeowner/hiring-guide" element={<HiringGuide />} />
           <Route path="/homeowner/post-job" element={<PostJob />} />
+          <Route path="/services" element={<Services />} />
           <Route path="/homeowner/support" element={<Support />} />
           <Route path="/homeowner/complaints" element={<ComplaintsHomeowner />} />
-          <Route path="/professional/complaints" element={<ComplaintsProfessional />} />
+
+          {/* Professional routes */}
+          <Route path="/professional" element={<ProfessionalHome />} />
+          <Route path="/professional/dashboard" element={<ProfessionalDashboard />} />
+          <Route path="/professional/register" element={<ProfessionalRegistration />} />
+          <Route path="/professional/complaints" element={<Complaints />} />
           <Route path="/professional/professional-support" element={<ProfessionalSupport />} />
         </Routes>
       </Layout>

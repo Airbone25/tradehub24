@@ -1,7 +1,7 @@
 import React from 'react';
-import { AlertCircle, CheckCircle, Clock, MessageSquare, Phone } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, MessageSquare } from 'lucide-react';
 
-export function ComplaintsProfessional() {
+export function Complaints() {
   return (
     <div className="py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
