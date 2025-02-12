@@ -1,31 +1,18 @@
-// src/components/Navigation.tsx
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { Menu, X, User } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import logoImage from '../assets/logo-image.png';
 import logoName from '../assets/logo-name.png';
-import { UserTypeContext, UserType } from '../context/UserTypeContext';
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
-  const { userType, setUserType } = useContext(UserTypeContext)!;
-  const navigate = useNavigate();
-
-  const handleUserTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedType = e.target.value as UserType;
-    setUserType(selectedType);
-    // Navigate based on selected type
-    if (selectedType === 'professional') {
-      navigate('/'); // root route will now render ProfessionalHome
-    } else {
-      navigate('/'); // root route will render HomePage for homeowners
-    }
-  };
+  const [userType, setUserType] = useState<'homeowner' | 'professional'>('homeowner');
 
   return (
     <nav className="bg-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
+          {/* Logo Section */}
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center space-x-2">
               <img src={logoImage} alt="Logo Icon" className="h-12 w-auto" />
@@ -33,6 +20,7 @@ export function Navigation() {
             </Link>
           </div>
 
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {userType === 'homeowner' ? (
               <>
@@ -47,16 +35,20 @@ export function Navigation() {
                 <Link to="/professional/professional-support" className="text-gray-700 hover:text-[#105298]">Support</Link>
               </>
             )}
+            
+            {/* User Type Toggle */}
             <div className="relative">
-              <select 
+              <select
                 value={userType}
-                onChange={handleUserTypeChange}
+                onChange={(e) => setUserType(e.target.value as 'homeowner' | 'professional')}
                 className="appearance-none bg-white border border-gray-300 rounded-md py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-[#105298]"
               >
                 <option value="homeowner">For Homeowners</option>
                 <option value="professional">For Professionals</option>
               </select>
             </div>
+
+            {/* Login Button */}
             <Link 
               to="/login" 
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#e20000] hover:bg-[#cc0000]"
@@ -66,6 +58,7 @@ export function Navigation() {
             </Link>
           </div>
 
+          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -77,10 +70,24 @@ export function Navigation() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            {/* User Type Toggle (Mobile) */}
+            <div className="px-3 py-2">
+              <label className="block text-gray-700 text-sm font-medium mb-1">Switch User Type:</label>
+              <select
+                value={userType}
+                onChange={(e) => setUserType(e.target.value as 'homeowner' | 'professional')}
+                className="w-full bg-white border border-gray-300 rounded-md py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-[#105298]"
+              >
+                <option value="homeowner">For Homeowners</option>
+                <option value="professional">For Professionals</option>
+              </select>
+            </div>
+
+            {/* Mobile Navigation Links */}
             {userType === 'homeowner' ? (
               <>
                 <Link to="/how-it-works" className="block px-3 py-2 text-gray-700">How It Works</Link>
@@ -94,6 +101,7 @@ export function Navigation() {
                 <Link to="/professional/professional-support" className="block px-3 py-2 text-gray-700">Support</Link>
               </>
             )}
+            
             <Link to="/login" className="block px-3 py-2 text-gray-700">Login</Link>
           </div>
         </div>
