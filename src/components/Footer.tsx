@@ -30,7 +30,7 @@ export function Footer() {
             <h3 className="text-[#e20000] font-semibold mb-3">About us</h3>
             <ul className="space-y-2">
               <li><Link to="/about/company-info" className="hover:underline">Company Information</Link></li>
-              <li><Link to="/about/membership-pricing" className="hover:underline">Membership Pricing</Link></li>
+              <li><Link to="/pricing" className="hover:underline">Membership Pricing</Link></li>
               <li><Link to="/careers" className="hover:underline">Careers</Link></li>
             </ul>
           </div>
@@ -52,7 +52,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li><Link to="/join-as-pro" className="hover:underline">Sign Up</Link></li>
               <li><Link to="/how-it-works" className="hover:underline">How It Works</Link></li>
-              <li><Link to="/about/membership-pricing" className="hover:underline">Membership & Benefit</Link></li>
+              <li><Link to="/pricing" className="hover:underline">Membership & Benefit</Link></li>
               {/* <li><Link to="/professional/complaints" className="hover:underline">Complaints</Link></li> */}
               <li><Link to="/professional/professional-support" className="hover:underline">Professional Support</Link></li>
             </ul>
