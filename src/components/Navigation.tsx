@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, X, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import logoImage from '../assets/logo-image.png';
 import logoName from '../assets/logo-name.png';
 
 export function Navigation() {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [userType, setUserType] = useState<'homeowner' | 'professional'>('homeowner');
+  
+  // Retrieve stored user type or default to 'homeowner'
+  const [userType, setUserType] = useState<'homeowner' | 'professional'>(
+    localStorage.getItem('userType') as 'homeowner' | 'professional' || 'homeowner'
+  );
+
+  // Update localStorage & redirect when user type changes
+  useEffect(() => {
+    localStorage.setItem('userType', userType);
+    navigate(userType === 'homeowner' ? '/' : '/professional');
+  }, [userType, navigate]);
 
   return (
     <nav className="bg-white shadow-lg">
@@ -35,7 +46,7 @@ export function Navigation() {
                 <Link to="/professional/professional-support" className="text-gray-700 hover:text-[#105298]">Support</Link>
               </>
             )}
-            
+
             {/* User Type Toggle */}
             <div className="relative">
               <select
