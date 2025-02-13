@@ -1,21 +1,53 @@
 import React from 'react';
-import { Search, Shield, Clock, Star } from 'lucide-react';
+import { Shield, Clock, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import man1Image from '../assets/man-1.png';
+
+const testimonials = [
+  {
+    id: '1',
+    name: 'Sarah Johnson',
+    role: 'Homeowner',
+    content: 'Found a great electrician within hours. The whole process was smooth and professional.',
+    avatar:
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+  },
+  {
+    id: '2',
+    name: 'Michael Smith',
+    role: 'Homeowner',
+    content:
+      "Quality work, fair prices, and excellent communication. Couldn't be happier!",
+    avatar:
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+  },
+  {
+    id: '3',
+    name: 'Emily Davis',
+    role: 'Homeowner',
+    content:
+      'The guarantee gave me peace of mind. The carpenter did an amazing job!',
+    avatar:
+      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+  },
+];
 
 export function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-[#105298] text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section
+        className="relative bg-[#105298] text-white py-20 flex items-center"
+        style={{ minHeight: '587px' }} // Minimal change: ensures a tall area for the hero
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
                 Find Trusted Professionals for Your Home
               </h1>
               <p className="text-xl mb-8">
-                Connect with verified local trade professionals for all your home improvement needs
+                Connect with verified local trade professionals for all your home improvement needs.
               </p>
               <div className="max-w-3xl">
                 <div className="flex flex-col md:flex-row gap-4 bg-white rounded-lg p-2">
@@ -30,10 +62,9 @@ export function HomePage() {
                 </div>
               </div>
             </div>
-            {/* Mascot Image */}
             <div className="flex justify-center">
               <Link to="/" className="flex-shrink-0 flex items-center space-x-2">
-                <img src={man1Image} alt="Friendly Tradesperson" className="w-96" />
+                <img src={man1Image} alt="Friendly Tradesperson" className="max-h-[428px] object-contain" />
               </Link>
             </div>
           </div>
@@ -48,21 +79,21 @@ export function HomePage() {
               <Shield className="w-12 h-12 text-[#105298] mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">Verified Professionals</h3>
               <p className="text-gray-600">
-                Every professional is thoroughly vetted and background-checked
+                Every professional is thoroughly vetted and background-checked.
               </p>
             </div>
             <div className="text-center p-6">
               <Clock className="w-12 h-12 text-[#105298] mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">Quick Response</h3>
               <p className="text-gray-600">
-                Get quotes from available professionals within hours
+                Get quotes from available professionals within hours.
               </p>
             </div>
             <div className="text-center p-6">
               <Star className="w-12 h-12 text-[#105298] mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">Quality Guaranteed</h3>
               <p className="text-gray-600">
-                Satisfaction guaranteed on all work or your money back
+                Satisfaction guaranteed on all work or your money back.
               </p>
             </div>
           </div>
@@ -81,6 +112,7 @@ export function HomePage() {
                     src={testimonial.avatar}
                     alt={testimonial.name}
                     className="w-12 h-12 rounded-full mr-4"
+                    loading="eager"
                   />
                   <div>
                     <h4 className="font-semibold">{testimonial.name}</h4>
@@ -98,7 +130,7 @@ export function HomePage() {
       <section className="bg-[#105298] text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to Start Your Project?</h2>
-          <p className="text-xl mb-8">Join thousands of satisfied customers today</p>
+          <p className="text-xl mb-8">Join thousands of satisfied customers today.</p>
           <button className="bg-[#e20000] text-white px-8 py-3 rounded-md hover:bg-[#cc0000] transition-colors">
             Find Professionals Now
           </button>
@@ -107,27 +139,3 @@ export function HomePage() {
     </div>
   );
 }
-
-const testimonials = [
-  {
-    id: '1',
-    name: 'Sarah Johnson',
-    role: 'Homeowner',
-    content: 'Found a great electrician within hours. The whole process was smooth and professional.',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  },
-  {
-    id: '2',
-    name: 'Michael Smith',
-    role: 'Homeowner',
-    content: 'Quality work, fair prices, and excellent communication. Couldn\'t be happier!',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  },
-  {
-    id: '3',
-    name: 'Emily Davis',
-    role: 'Homeowner',
-    content: 'The guarantee gave me peace of mind. The carpenter did an amazing job!',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  },
-];

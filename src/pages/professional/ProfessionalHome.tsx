@@ -1,21 +1,28 @@
 import React from 'react';
 import { Briefcase, Users, Banknote, Star, Shield, ChevronRight, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import man2Image from '../../assets/man-2.png';
 
 export function ProfessionalHome() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-[#105298] text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section
+        className="relative bg-[#105298] text-white py-20 flex items-center"
+        style={{ minHeight: '587px' }} // Matches your HomePage's hero size
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            {/* Left Column */}
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                Grow Your Business with TradeHub24
+              <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+                Grow Your Business <br />
+                with TradeHub24
               </h1>
               <p className="text-xl mb-8">
                 Join thousands of successful trade professionals connecting with quality clients daily
               </p>
+              {/* Buttons in the older design: side by side with space-x-4 */}
               <div className="space-x-4">
                 <Link 
                   to="/join-as-pro"
@@ -31,12 +38,16 @@ export function ProfessionalHome() {
                 </Link>
               </div>
             </div>
-            <div className="hidden md:block">
-              <img
-                src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                alt="Professional at work"
-                className="rounded-lg shadow-xl"
-              />
+
+            {/* Right Column (Image) */}
+            <div className="flex justify-center">
+              <Link to="/" className="flex-shrink-0 flex items-center space-x-2">
+                <img
+                  src={man2Image}
+                  alt="Professional at work"
+                  className="max-h-[428px] object-contain"
+                />
+              </Link>
             </div>
           </div>
         </div>
