@@ -41,13 +41,14 @@ export function ProfessionalHome() {
 
             {/* Right Column (Image) */}
             <div className="flex justify-center">
-              <Link to="/" className="flex-shrink-0 flex items-center space-x-2">
-                <img
-                  src={man2Image}
-                  alt="Professional at work"
-                  className="max-h-[428px] object-contain"
-                />
-              </Link>
+            <Link to="/" className="flex-shrink-0 flex items-center space-x-2">
+  <img
+    src={man2Image}
+    alt="Professional at work"
+    className="max-h-[428px] object-contain transform origin-top"
+    style={{ transform: 'scaleX(1.05) scaleY(1.05)' }}
+  />
+</Link>
             </div>
           </div>
         </div>
