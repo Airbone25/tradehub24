@@ -1,7 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, ArrowRight } from 'lucide-react';
 
 export function Pricing() {
+  // Set the selected plan index. On mount, default to the popular plan if available.
+  const [selectedPlanIndex, setSelectedPlanIndex] = useState(0);
+
+  useEffect(() => {
+    const popularIndex = plans.findIndex(plan => plan.popular);
+    if (popularIndex !== -1) {
+      setSelectedPlanIndex(popularIndex);
+    }
+  }, []);
+
   return (
     <div className="py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -14,8 +24,9 @@ export function Pricing() {
           {plans.map((plan, index) => (
             <div 
               key={index} 
-              className={`bg-white rounded-lg shadow-lg overflow-hidden ${
-                plan.popular ? 'ring-2 ring-[#e20000]' : ''
+              onClick={() => setSelectedPlanIndex(index)}
+              className={`cursor-pointer bg-white rounded-lg shadow-lg overflow-hidden ${
+                selectedPlanIndex === index ? 'ring-2 ring-[#e20000]' : ''
               }`}
             >
               {plan.popular && (
