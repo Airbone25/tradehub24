@@ -2,6 +2,8 @@
 import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
+
+// Pages
 import { HomePage } from './pages/HomePage';
 import { ProfessionalHome } from './pages/professional/ProfessionalHome';
 import { HowItWorks } from './pages/HowItWorks';
@@ -31,8 +33,22 @@ import { ProfessionalSupport } from './pages/professional/ProfessionalSupport';
 import { ProfessionalRegistration } from './pages/professional/ProfessionalRegistration';
 import { ProfessionalDashboard } from './pages/professional/ProfessionalDashboard';
 import { Services } from './pages/Services';
+
+// New: Homeowner Auth Pages
+import HomeownerSignUp from './pages/homeowner/HomeownerSignUp';
+import HomeownerLogin from './pages/homeowner/HomeownerLogin';
+
+// New: Professional Auth Pages
+import ProfessionalSignUp from './pages/professional/ProfessionalSignUp';
+import ProfessionalLogin from './pages/professional/ProfessionalLogin';
+
+// Context
 import { UserTypeProvider, UserTypeContext } from './context/UserTypeContext';
 
+// Optional test component
+import TestConnection from './components/TestConnection';
+
+// Dynamic home route based on user type
 function HomeRedirect() {
   const { userType } = useContext(UserTypeContext)!;
   return userType === 'professional' ? <ProfessionalHome /> : <HomePage />;
@@ -44,8 +60,10 @@ function App() {
       <Router>
         <Layout>
           <Routes>
-            {/* Home route is now dynamic */}
+            {/* Dynamic Home route */}
             <Route path="/" element={<HomeRedirect />} />
+
+            {/* Public / Shared Routes */}
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/about-us" element={<AboutUs />} />
             <Route path="/contact-us" element={<ContactUs />} />
@@ -65,17 +83,26 @@ function App() {
             <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/about/company-info" element={<CompanyInformation />} />
             <Route path="/about/membership-pricing" element={<MembershipPricing />} />
+            <Route path="/services" element={<Services />} />
+
+            {/* Homeowner Routes */}
+            <Route path="/homeowner/signup" element={<HomeownerSignUp />} />
+            <Route path="/homeowner/login" element={<HomeownerLogin />} />
             <Route path="/homeowner/hiring-guide" element={<HiringGuide />} />
             <Route path="/homeowner/post-job" element={<PostJob />} />
-            <Route path="/services" element={<Services />} />
             <Route path="/homeowner/support" element={<Support />} />
             <Route path="/homeowner/complaints" element={<ComplaintsHomeowner />} />
 
-            {/* Professional routes */}
+            {/* Professional Routes */}
+            <Route path="/professional/signup" element={<ProfessionalSignUp />} />
+            <Route path="/professional/login" element={<ProfessionalLogin />} />
             <Route path="/professional/dashboard" element={<ProfessionalDashboard />} />
             <Route path="/professional/register" element={<ProfessionalRegistration />} />
             <Route path="/professional/complaints" element={<Complaints />} />
             <Route path="/professional/professional-support" element={<ProfessionalSupport />} />
+
+            {/* Test route for Supabase connection (optional) */}
+            <Route path="/test-connection" element={<TestConnection />} />
           </Routes>
         </Layout>
       </Router>

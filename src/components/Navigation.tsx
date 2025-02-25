@@ -14,8 +14,8 @@ export function Navigation() {
   const handleUserTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedType = e.target.value as UserType;
     setUserType(selectedType);
-    // Immediately navigate to home route; HomeRedirect in App.tsx
-    navigate("/");
+    // Immediately navigate to home route; HomeRedirect in App.tsx can handle redirect logic
+    navigate('/');
     // Close mobile menu if open
     setIsOpen(false);
   };
@@ -31,6 +31,7 @@ export function Navigation() {
               <img src={logoName} alt="Logo Text" className="h-8 w-auto" />
             </Link>
           </div>
+
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {userType === 'homeowner' ? (
@@ -58,6 +59,8 @@ export function Navigation() {
                 </Link>
               </>
             )}
+
+            {/* User Type Dropdown */}
             <div className="relative">
               <select
                 value={userType}
@@ -68,14 +71,17 @@ export function Navigation() {
                 <option value="professional">For Professionals</option>
               </select>
             </div>
+
+            {/* Login Button - dynamic link based on userType */}
             <Link
-              to="/login"
+              to={userType === 'homeowner' ? '/homeowner/login' : '/professional/login'}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#e20000] hover:bg-[#cc0000]"
             >
               <User className="h-4 w-4 mr-2" />
               Login
             </Link>
           </div>
+
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
             <button
@@ -87,6 +93,7 @@ export function Navigation() {
           </div>
         </div>
       </div>
+
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden">
@@ -102,6 +109,7 @@ export function Navigation() {
                 <option value="professional">For Professionals</option>
               </select>
             </div>
+
             {userType === 'homeowner' ? (
               <>
                 <Link to="/how-it-works" className="block px-3 py-2 text-gray-700">
@@ -127,7 +135,20 @@ export function Navigation() {
                 </Link>
               </>
             )}
-            <Link to="/login" className="block px-3 py-2 text-gray-700">
+
+            {/* Sign Up Link (Mobile) */}
+            <Link
+              to={userType === 'homeowner' ? '/homeowner/signup' : '/professional/signup'}
+              className="block px-3 py-2 text-gray-700"
+            >
+              Sign Up
+            </Link>
+
+            {/* Optionally a Login link in mobile menu as well */}
+            <Link
+              to={userType === 'homeowner' ? '/homeowner/login' : '/professional/login'}
+              className="block px-3 py-2 text-gray-700"
+            >
               Login
             </Link>
           </div>
