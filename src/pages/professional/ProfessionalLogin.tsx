@@ -57,18 +57,8 @@ const ProfessionalLogin = () => {
   };
 
   // Email OTP
-  const handleLoginWithOTP = async () => {
-    const { data, error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: 'https://www.tradehub24.com/professional/login',
-      },
-    });
-    if (error) {
-      alert(error.message);
-    } else {
-      alert('Check your email for the magic link!');
-    }
+  const handleLoginWithOTP = () => {
+    navigate('/professional/login-otp');
   };
 
   // Google login

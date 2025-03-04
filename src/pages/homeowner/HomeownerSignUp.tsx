@@ -1,5 +1,5 @@
 // src/pages/homeowner/HomeownerSignup.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
 import { signUpWithEmail } from '../../services/authService';
@@ -18,75 +18,9 @@ const HomeownerSignup = () => {
     phone: '',
   });
 
-  // MANUAL PARSE OF #access_token / #refresh_token
-  useEffect(() => {
-    async function parseHashTokens() {
-      if (window.location.hash) {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        if (accessToken && refreshToken) {
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-          if (error) {
-            console.error('Error setting session from hash (HomeownerSignup):', error.message);
-          } else {
-            console.log('Session stored from hash (HomeownerSignup):', data);
-          }
-          // remove hash
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-      }
-    }
-    parseHashTokens();
-  }, []);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Sign up with Email OTP (Magic Link)
-  const handleSignUpWithOTP = async () => {
-    try {
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email: formData.email,
-        options: {
-          emailRedirectTo: 'https://www.tradehub24.com/homeowner/login',
-          data: {
-            user_type: 'homeowner',
-            phone: formData.phone,
-            postcode: formData.postcode,
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-          },
-        },
-      });
-      if (error) {
-        console.error('Email OTP error:', error.message);
-      } else {
-        alert('Check your email for the magic link!');
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Google sign-up
-  const handleSignUpWithGoogle = async () => {
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: 'https://www.tradehub24.com/homeowner/login',
-        },
-      });
-      if (error) console.error('Google OAuth error:', error.message);
-    } catch (err) {
-      console.error(err);
-    }
   };
 
   // Standard email+password sign-up
@@ -214,6 +148,7 @@ const HomeownerSignup = () => {
                   id="password"
                   name="password"
                   type="password"
+                  autoComplete="new-password"
                   required
                   value={formData.password}
                   onChange={handleChange}
@@ -236,6 +171,7 @@ const HomeownerSignup = () => {
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
+                  autoComplete="new-password"
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
@@ -280,6 +216,7 @@ const HomeownerSignup = () => {
                   id="phone"
                   name="phone"
                   type="tel"
+                  required
                   value={formData.phone}
                   onChange={handleChange}
                   className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 
@@ -292,60 +229,12 @@ const HomeownerSignup = () => {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm 
-                           font-medium text-white bg-[#e20000] hover:bg-[#cc0000] focus:outline-none focus:ring-2 
-                           focus:ring-offset-2 focus:ring-[#105298]"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#e20000] hover:bg-[#cc0000] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#105298]"
               >
                 Create Account
               </button>
             </div>
           </form>
-
-          {/* Additional Buttons (Email OTP, Google) */}
-          <div className="mt-6 space-y-2">
-            <button
-              type="button"
-              onClick={handleSignUpWithOTP}
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm 
-                         font-medium text-gray-700 bg-white hover:bg-gray-50"
-            >
-              Sign Up with Email OTP
-            </button>
-
-            {/* Google button */}
-            <button
-              type="button"
-              onClick={handleSignUpWithGoogle}
-              className="
-                w-full
-                flex
-                items-center
-                justify-center
-                border
-                border-gray-300
-                rounded-md
-                shadow-sm
-                px-6
-                py-2
-                text-sm
-                font-medium
-                text-gray-700
-                bg-white
-                hover:bg-gray-50
-                focus:outline-none
-                focus:ring-2
-                focus:ring-offset-2
-                focus:ring-gray-500
-              "
-            >
-              <img
-                src="/src/assets/googlepng.png"
-                alt="Google Logo"
-                className="h-5 w-5 mr-2"
-              />
-              <span>Continue with Google</span>
-            </button>
-          </div>
         </div>
       </div>
     </div>

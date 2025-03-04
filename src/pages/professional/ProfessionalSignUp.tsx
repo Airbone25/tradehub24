@@ -1,5 +1,5 @@
 // src/pages/professional/ProfessionalSignup.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
 import { signUpWithEmail } from '../../services/authService';
@@ -21,72 +21,9 @@ const ProfessionalSignup = () => {
     businessRegistration: '',
   });
 
-  // MANUAL PARSE OF #access_token / #refresh_token
-  useEffect(() => {
-    async function parseHashTokens() {
-      if (window.location.hash) {
-        // e.g. #access_token=...&refresh_token=...&...
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        if (accessToken && refreshToken) {
-          // Set session in Supabase
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-          if (error) {
-            console.error('Error setting session from hash:', error.message);
-          } else {
-            console.log('Session stored from hash (ProfessionalSignup):', data);
-          }
-          // Remove the hash from the URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-      }
-    }
-    parseHashTokens();
-  }, []);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Email OTP sign-up
-  const handleSignUpWithOTP = async () => {
-    const { data, error } = await supabase.auth.signInWithOtp({
-      email: formData.email,
-      options: {
-        emailRedirectTo: 'https://www.tradehub24.com/professional/login',
-        data: {
-          user_type: 'professional',
-          phone: formData.phone,
-          postcode: formData.postcode,
-          companyName: formData.companyName,
-          trade: formData.trade,
-          businessRegistration: formData.businessRegistration,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-        },
-      },
-    });
-    if (error) {
-      alert(error.message);
-    } else {
-      alert('Check your email for the magic link!');
-    }
-  };
-
-  // Google sign-up
-  const handleSignUpWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: 'https://www.tradehub24.com/professional/login',
-      },
-    });
-    if (error) alert(error.message);
   };
 
   // Standard email+password sign-up
@@ -209,7 +146,7 @@ const ProfessionalSignup = () => {
             {/* Trade */}
             <div>
               <label htmlFor="trade" className="block text-sm font-medium text-gray-700">
-                Primary Trade
+                Trade
               </label>
               <div className="mt-1">
                 <select
@@ -221,13 +158,14 @@ const ProfessionalSignup = () => {
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
                              placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 >
-                  <option value="">Select your trade</option>
-                  <option value="electrician">Electrician</option>
+                  <option value="">Select a trade</option>
                   <option value="plumber">Plumber</option>
+                  <option value="electrician">Electrician</option>
                   <option value="carpenter">Carpenter</option>
-                  <option value="painter">Painter & Decorator</option>
-                  <option value="builder">Builder</option>
+                  <option value="painter">Painter</option>
                   <option value="gardener">Gardener</option>
+                  <option value="cleaner">Cleaner</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
             </div>
@@ -268,6 +206,7 @@ const ProfessionalSignup = () => {
                   id="password"
                   name="password"
                   type="password"
+                  autoComplete="new-password"
                   required
                   value={formData.password}
                   onChange={handleChange}
@@ -290,6 +229,7 @@ const ProfessionalSignup = () => {
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
+                  autoComplete="new-password"
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
@@ -302,7 +242,7 @@ const ProfessionalSignup = () => {
             {/* Postcode */}
             <div>
               <label htmlFor="postcode" className="block text-sm font-medium text-gray-700">
-                Business Postcode
+                Postcode
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -324,7 +264,7 @@ const ProfessionalSignup = () => {
             {/* Phone */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                Business Phone
+                Phone Number
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -346,18 +286,20 @@ const ProfessionalSignup = () => {
             {/* Business Registration */}
             <div>
               <label htmlFor="businessRegistration" className="block text-sm font-medium text-gray-700">
-                Business Registration Number
+                Business Registration Number (Optional)
               </label>
               <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Briefcase className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
                   id="businessRegistration"
                   name="businessRegistration"
                   type="text"
                   value={formData.businessRegistration}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
                              placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
-                  placeholder="Optional"
                 />
               </div>
             </div>
@@ -366,61 +308,12 @@ const ProfessionalSignup = () => {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm 
-                           text-sm font-medium text-white bg-[#e20000] hover:bg-[#cc0000] 
-                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#105298]"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#e20000] hover:bg-[#cc0000] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#105298]"
               >
                 Create Professional Account
               </button>
             </div>
           </form>
-
-          {/* Additional Buttons (Email OTP, Google) */}
-          <div className="mt-6 space-y-2">
-            {/* Email OTP */}
-            <button
-              type="button"
-              onClick={handleSignUpWithOTP}
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm 
-                         text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-            >
-              Sign Up with Email OTP
-            </button>
-
-            {/* Google Button */}
-            <button
-              type="button"
-              onClick={handleSignUpWithGoogle}
-              className="
-                w-full
-                flex
-                items-center
-                justify-center
-                border
-                border-gray-300
-                rounded-md
-                shadow-sm
-                px-6
-                py-2
-                text-sm
-                font-medium
-                text-gray-700
-                bg-white
-                hover:bg-gray-50
-                focus:outline-none
-                focus:ring-2
-                focus:ring-offset-2
-                focus:ring-gray-500
-              "
-            >
-              <img
-                src="/src/assets/googlepng.png"
-                alt="Google Logo"
-                className="h-5 w-5 mr-2"
-              />
-              <span>Continue with Google</span>
-            </button>
-          </div>
         </div>
       </div>
     </div>

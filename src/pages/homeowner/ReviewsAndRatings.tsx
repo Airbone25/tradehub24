@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../../../../.bolt/lib/supabaseClient';
+import { supabase } from '../../services/supabaseClient';
 import { Star, ThumbsUp, ThumbsDown, User, Calendar, MessageCircle } from 'lucide-react';
 
 interface Review {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../../../.bolt/lib/supabaseClient';
+import { supabase } from '../../services/supabaseClient';
 import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaLock, FaCamera } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 

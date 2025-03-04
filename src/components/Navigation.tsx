@@ -47,14 +47,14 @@ export function Navigation() {
               </>
             ) : (
               <>
-                <Link to="/professional/dashboard" className="text-gray-700 hover:text-[#105298]">
-                  Dashboard
+                <Link to="/professional/how-it-works" className="text-gray-700 hover:text-[#105298]">
+                  How It Works
                 </Link>
-                <Link to="/professional/register" className="text-gray-700 hover:text-[#105298]">
-                  Register
+                <Link to="/professional/find-jobs" className="text-gray-700 hover:text-[#105298]">
+                  Find Jobs
                 </Link>
-                <Link to="/professional/professional-support" className="text-gray-700 hover:text-[#105298]">
-                  Support
+                <Link to="/professional/membership" className="text-gray-700 hover:text-[#105298]">
+                  Membership
                 </Link>
               </>
             )}
@@ -123,14 +123,14 @@ export function Navigation() {
               </>
             ) : (
               <>
-                <Link to="/professional/dashboard" className="block px-3 py-2 text-gray-700">
-                  Dashboard
+                <Link to="/professional/how-it-works" className="block px-3 py-2 text-gray-700">
+                  How It Works
                 </Link>
-                <Link to="/professional/register" className="block px-3 py-2 text-gray-700">
-                  Register
+                <Link to="/professional/find-jobs" className="block px-3 py-2 text-gray-700">
+                  Find Jobs
                 </Link>
-                <Link to="/professional/professional-support" className="block px-3 py-2 text-gray-700">
-                  Support
+                <Link to="/professional/membership" className="block px-3 py-2 text-gray-700">
+                  Membership
                 </Link>
               </>
             )}

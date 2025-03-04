@@ -1,36 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContext';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { supabase } from '../../services/supabaseClient';
+import { checkIfEmailExists } from '../../services/emailService';
+import { FaEnvelope } from 'react-icons/fa';
 
 const HomeownerLoginOTP: React.FC = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const { loginWithOTP, isAuthenticated, userType } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Check if we're on the callback page
   const isCallback = location.pathname.includes('callback');
 
+  // Get email from location state if available
   useEffect(() => {
-    // If user is already authenticated and is a homeowner, redirect to dashboard
-    if (isAuthenticated && userType === 'homeowner') {
-      navigate('/homeowner/dashboard');
+    if (location.state?.email) {
+      setEmail(location.state.email);
     }
-    // If user is authenticated but not a homeowner, redirect to appropriate dashboard
-    else if (isAuthenticated && userType === 'professional') {
-      navigate('/professional/dashboard');
-    }
-    
+  }, [location.state]);
+
+  useEffect(() => {
     // Handle OTP callback
     if (isCallback) {
       const handleOTPCallback = async () => {
         setLoading(true);
         try {
-          // The OTP confirmation is handled automatically by Supabase Auth
-          setMessage({ type: 'success', text: 'Successfully authenticated! Redirecting...' });
-          // Redirect will happen in the useEffect above once auth state updates
+          // Get the tokens from the URL hash
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+
+          if (accessToken && refreshToken) {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
+
+            if (error) throw error;
+
+            // Verify user type
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user?.user_metadata?.user_type !== 'homeowner') {
+              await supabase.auth.signOut();
+              throw new Error('Access denied: you are not a homeowner');
+            }
+
+            setMessage({ type: 'success', text: 'Successfully authenticated! Redirecting...' });
+            setTimeout(() => navigate('/homeowner/dashboard'), 1500);
+          }
         } catch (error: any) {
           console.error('Error during OTP callback:', error);
           setMessage({ type: 'error', text: error.message || 'Failed to verify login link' });
@@ -41,7 +60,7 @@ const HomeownerLoginOTP: React.FC = () => {
 
       handleOTPCallback();
     }
-  }, [isAuthenticated, userType, navigate, isCallback]);
+  }, [isCallback, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +68,29 @@ const HomeownerLoginOTP: React.FC = () => {
     setMessage(null);
 
     try {
-      await loginWithOTP(email, 'homeowner');
+      // Check if email exists and is a homeowner
+      const { exists, userType } = await checkIfEmailExists(email);
+      if (!exists) {
+        navigate('/homeowner/signup', { 
+          state: { message: 'Account not found. Please sign up.', email } 
+        });
+        return;
+      }
+      if (userType && userType !== 'homeowner') {
+        throw new Error('This email is registered as a professional. Please use the professional login.');
+      }
+
+      // Send magic link
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/homeowner/login-otp-callback`,
+          data: { user_type: 'homeowner' }
+        }
+      });
+
+      if (error) throw error;
+
       setMessage({ 
         type: 'success', 
         text: 'Magic link sent! Check your email for a login link.' 
@@ -67,7 +108,7 @@ const HomeownerLoginOTP: React.FC = () => {
 
   if (isCallback) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -78,7 +119,7 @@ const HomeownerLoginOTP: React.FC = () => {
           <div className="mt-8 space-y-6">
             {loading ? (
               <div className="flex justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
               </div>
             ) : message ? (
               <div className={`rounded-md p-4 ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
@@ -92,7 +133,7 @@ const HomeownerLoginOTP: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -109,47 +150,68 @@ const HomeownerLoginOTP: React.FC = () => {
           </div>
         )}
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+        <div className="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email-address" className="sr-only">Email address</label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FaEnvelope className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              {loading ? 'Sending...' : 'Send Magic Link'}
-            </button>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <a href="/homeowner/login" className="font-medium text-blue-600 hover:text-blue-500">
-                Login with password instead
-              </a>
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              >
+                {loading ? 'Sending...' : 'Send Magic Link'}
+              </button>
             </div>
-            <div className="text-sm">
-              <a href="/homeowner/signup" className="font-medium text-blue-600 hover:text-blue-500">
-                Sign up
-              </a>
+          </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or</span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <Link
+                to="/homeowner/login"
+                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
+                Password Login
+              </Link>
+
+              <Link
+                to="/homeowner/signup"
+                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
+                Sign Up
+              </Link>
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

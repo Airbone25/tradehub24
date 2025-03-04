@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../../../.bolt/lib/supabaseClient';
+import { supabase } from '../../services/supabaseClient';
 import { FaDownload, FaSearch, FaFilter, FaReceipt, FaCreditCard, FaMoneyBill } from 'react-icons/fa';
 
 interface Payment {

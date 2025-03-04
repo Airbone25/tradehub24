@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../../../.bolt/lib/supabaseClient';
+import { supabase } from '../../services/supabaseClient';
 import { FaBell, FaCheck, FaTrash, FaExclamationCircle, FaUser, FaTools, FaCalendarAlt, FaComments, FaStar } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 

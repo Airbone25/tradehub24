@@ -6,11 +6,13 @@ import { UserType } from '../services/authService';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredUserType?: UserType;
+  redirectTo?: string;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requiredUserType 
+  requiredUserType,
+  redirectTo
 }) => {
   const { isAuthenticated, userType, loading } = useUser();
   const location = useLocation();
@@ -24,12 +26,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (!isAuthenticated) {
-    // Redirect to login while saving the attempted URL
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    const redirectPath = redirectTo || "/login";
+    return <Navigate to={redirectPath} state={{ from: location }} replace />;
   }
 
   if (requiredUserType && userType !== requiredUserType) {
-    // User is authenticated but doesn't have the required role
     return <Navigate to={`/${userType}/dashboard`} replace />;
   }
 

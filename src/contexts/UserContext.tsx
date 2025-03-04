@@ -17,6 +17,7 @@ interface UserContextProps {
   isAuthenticated: boolean;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   logout: () => Promise<void>;
+  loginWithOTP: (email: string, userType: UserType) => Promise<{ success: boolean; message: string }>;
 }
 
 const UserContext = createContext<UserContextProps | undefined>(undefined);
@@ -38,6 +39,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [userType, setUserType] = useState<UserType | null>(null);
   const navigate = useNavigate();
 
   const fetchUserProfile = async (userId: string) => {
@@ -57,6 +59,19 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       setError('Failed to fetch user profile');
       return null;
     }
+  };
+
+  // Get user type from profile or user metadata
+  const getUserType = (user: SupabaseUser | null, profile: UserProfile | null): UserType | null => {
+    if (profile?.user_type) {
+      return profile.user_type;
+    }
+    
+    if (user?.user_metadata?.user_type) {
+      return user.user_metadata.user_type as UserType;
+    }
+    
+    return null;
   };
 
   useEffect(() => {
@@ -109,6 +124,14 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     };
   }, [navigate]);
 
+  useEffect(() => {
+    // Update userType whenever user or profile changes
+    const currentUserType = getUserType(user, profile);
+    if (currentUserType !== userType) {
+      setUserType(currentUserType);
+    }
+  }, [user, profile]);
+
   const updateProfile = async (updates: Partial<UserProfile>) => {
     try {
       setLoading(true);
@@ -155,6 +178,27 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     }
   };
 
+  const loginWithOTP = async (email: string, userType: UserType): Promise<{ success: boolean; message: string }> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/${userType}/login-otp-callback`,
+          data: { user_type: userType }
+        }
+      });
+
+      if (error) {
+        return { success: false, message: error.message };
+      }
+
+      return { success: true, message: 'Check your email for the magic link' };
+    } catch (err: any) {
+      console.error('OTP login error:', err);
+      return { success: false, message: err.message || 'An error occurred during login' };
+    }
+  };
+
   return (
     <UserContext.Provider 
       value={{ 
@@ -162,10 +206,11 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         profile,
         loading, 
         error,
-        userType: profile?.user_type || null,
+        userType,
         isAuthenticated: !!user,
         updateProfile,
-        logout 
+        logout,
+        loginWithOTP
       }}
     >
       {children}

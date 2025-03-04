@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '../../../../.bolt/lib/supabaseClient';
+import { supabase } from '../../services/supabaseClient';
 import MessagingInterface from '../../components/shared/MessagingInterface';
 
 interface Conversation {
@@ -30,6 +30,8 @@ const HomeownerMessages: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [selectedProfessionalId, setSelectedProfessionalId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Extract jobId from URL if present
@@ -126,6 +128,8 @@ const HomeownerMessages: React.FC = () => {
           
           if (conversation) {
             setSelectedConversation(conversation.id);
+            setSelectedJob({ id: conversation.job_id, title: conversation.job_title, status: '' });
+            setSelectedProfessionalId(conversation.professional_id);
           } else {
             // Create a new conversation if one doesn't exist for this job and professional
             await createNewConversation(userId, jobId, professionalId);
@@ -133,6 +137,8 @@ const HomeownerMessages: React.FC = () => {
         } else if (transformedConversations.length > 0) {
           // Select the first conversation if none is selected
           setSelectedConversation(transformedConversations[0].id);
+          setSelectedJob({ id: transformedConversations[0].job_id, title: transformedConversations[0].job_title, status: '' });
+          setSelectedProfessionalId(transformedConversations[0].professional_id);
         }
       }
       
@@ -216,6 +222,8 @@ const HomeownerMessages: React.FC = () => {
         
         setConversations(prev => [newConversation, ...prev]);
         setSelectedConversation(newConvo.id);
+        setSelectedJob({ id: jobId, title: job.title, status: '' });
+        setSelectedProfessionalId(professionalId);
       }
     } catch (err) {
       console.error('Failed to create conversation:', err);
@@ -244,6 +252,8 @@ const HomeownerMessages: React.FC = () => {
       
       // Mark conversation as read
       markConversationAsRead(conversationId);
+      setSelectedJob({ id: conversation.job_id, title: conversation.job_title, status: '' });
+      setSelectedProfessionalId(conversation.professional_id);
     }
   };
 
@@ -367,7 +377,7 @@ const HomeownerMessages: React.FC = () => {
             {filterConversations().length === 0 ? (
               <div className="p-6 text-center text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
                 <p className="mb-2">No conversations found</p>
                 <p className="text-sm">Post a job to start messaging with professionals</p>
@@ -422,11 +432,12 @@ const HomeownerMessages: React.FC = () => {
         
         {/* Messaging Interface */}
         <div className="w-full md:w-2/3 flex flex-col">
-          {selectedConversation ? (
+          {selectedConversation && selectedProfessionalId && (
             <MessagingInterface 
-              conversationId={selectedConversation}
-              userType="homeowner"
-              onMessageSent={() => {
+              currentUserId={selectedConversation}
+              jobId={selectedJob?.id}
+              recipientId={selectedProfessionalId}
+              onClose={() => {
                 // Refresh conversations to update last message
                 const fetchUser = async () => {
                   const { data: { user } } = await supabase.auth.getUser();
@@ -435,21 +446,6 @@ const HomeownerMessages: React.FC = () => {
                 fetchUser();
               }}
             />
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 bg-gray-50">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">Start a Conversation</h3>
-              <p className="text-gray-600 text-center max-w-md mb-6">
-                Select a conversation from the sidebar or post a job to connect with professionals.
-              </p>
-              <button 
-                onClick={() => navigate('/homeowner/PostJob')} 
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                Post a Job
-              </button>
-            </div>
           )}
         </div>
       </div>
