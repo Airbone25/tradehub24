@@ -1,7 +1,8 @@
 // src/pages/homeowner/HomeownerSignup.tsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../services/supabaseClient';
+import { signUpWithEmail } from '../../services/authService';
 import { Mail, Lock, User, MapPin, Phone } from 'lucide-react';
 
 const HomeownerSignup = () => {
@@ -17,35 +18,29 @@ const HomeownerSignup = () => {
     phone: '',
   });
 
-  // -- 1) PARSE HASH FOR ACCESS/REFRESH
+  // MANUAL PARSE OF #access_token / #refresh_token
   useEffect(() => {
-    async function parseHash() {
-      try {
-        const url = new URL(window.location.href);
-        const hashParams = new URLSearchParams(url.hash.slice(1));
+    async function parseHashTokens() {
+      if (window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
-
         if (accessToken && refreshToken) {
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
           if (error) {
-            console.error('Error setting session (HomeownerSignup):', error.message);
+            console.error('Error setting session from hash (HomeownerSignup):', error.message);
           } else {
-            console.log('Session stored from URL (HomeownerSignup):', data?.session);
-            // Clear the hash
-            url.hash = '';
-            window.history.replaceState({}, document.title, url.toString());
-            // Optionally navigate('/homeowner/post-job');
+            console.log('Session stored from hash (HomeownerSignup):', data);
           }
+          // remove hash
+          window.history.replaceState({}, document.title, window.location.pathname);
         }
-      } catch (err) {
-        console.error('Exception parsing session from URL (HomeownerSignup):', err);
       }
     }
-    parseHash();
+    parseHashTokens();
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,7 +54,7 @@ const HomeownerSignup = () => {
       const { data, error } = await supabase.auth.signInWithOtp({
         email: formData.email,
         options: {
-          emailRedirectTo: 'https://tradehub24.vercel.app/homeowner/login',
+          emailRedirectTo: 'https://www.tradehub24.com/homeowner/login',
           data: {
             user_type: 'homeowner',
             phone: formData.phone,
@@ -85,7 +80,7 @@ const HomeownerSignup = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://tradehub24.vercel.app/homeowner/login',
+          redirectTo: 'https://www.tradehub24.com/homeowner/login',
         },
       });
       if (error) console.error('Google OAuth error:', error.message);
@@ -103,20 +98,11 @@ const HomeownerSignup = () => {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        emailRedirectTo: 'https://tradehub24.vercel.app/homeowner/login',
-        data: {
-          user_type: 'homeowner',
-          phone: formData.phone,
-          postcode: formData.postcode,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-        },
-      },
-    });
+    const { data, error } = await signUpWithEmail(
+      formData.email,
+      formData.password,
+      'homeowner'
+    );
 
     if (error) {
       console.error('Sign up error:', error.message);
@@ -315,7 +301,7 @@ const HomeownerSignup = () => {
             </div>
           </form>
 
-          {/* Optional: Additional Buttons (Email OTP, Google) */}
+          {/* Additional Buttons (Email OTP, Google) */}
           <div className="mt-6 space-y-2">
             <button
               type="button"
@@ -325,6 +311,8 @@ const HomeownerSignup = () => {
             >
               Sign Up with Email OTP
             </button>
+
+            {/* Google button */}
             <button
               type="button"
               onClick={handleSignUpWithGoogle}
@@ -350,14 +338,11 @@ const HomeownerSignup = () => {
                 focus:ring-gray-500
               "
             >
-              <svg
+              <img
+                src="/src/assets/googlepng.png"
+                alt="Google Logo"
                 className="h-5 w-5 mr-2"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="-0.5 0 48 48"
-                version="1.1"
-              >
-                {/* (SVG path content) */}
-              </svg>
+              />
               <span>Continue with Google</span>
             </button>
           </div>

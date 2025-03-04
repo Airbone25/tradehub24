@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabaseClient'; // adjust path if needed
+import { supabase } from '../services/supabaseClient'; // Fixed import path
 
 function TestConnection() {
   const [result, setResult] = useState<any>(null);

@@ -1,13 +1,13 @@
 // src/pages/professional/ProfessionalSignup.tsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../services/supabaseClient';
+import { signUpWithEmail } from '../../services/authService';
 import { Mail, Lock, User, MapPin, Phone, Briefcase } from 'lucide-react';
 
 const ProfessionalSignup = () => {
   const navigate = useNavigate();
 
-  // FORM DATA
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -21,38 +21,33 @@ const ProfessionalSignup = () => {
     businessRegistration: '',
   });
 
-  // -- 1) PARSE HASH FOR ACCESS/REFRESH TOKENS
+  // MANUAL PARSE OF #access_token / #refresh_token
   useEffect(() => {
-    async function parseHash() {
-      try {
-        const url = new URL(window.location.href);
-        const hashParams = new URLSearchParams(url.hash.slice(1)); // remove leading '#'
+    async function parseHashTokens() {
+      if (window.location.hash) {
+        // e.g. #access_token=...&refresh_token=...&...
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
-
         if (accessToken && refreshToken) {
+          // Set session in Supabase
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
           if (error) {
-            console.error('Error setting session (ProfessionalSignup):', error.message);
+            console.error('Error setting session from hash:', error.message);
           } else {
-            console.log('Session stored from URL (ProfessionalSignup):', data?.session);
-            // Clear the hash from the URL
-            url.hash = '';
-            window.history.replaceState({}, document.title, url.toString());
-            // Optionally navigate('/professional/dashboard');
+            console.log('Session stored from hash (ProfessionalSignup):', data);
           }
+          // Remove the hash from the URL
+          window.history.replaceState({}, document.title, window.location.pathname);
         }
-      } catch (err) {
-        console.error('Exception parsing session from URL (ProfessionalSignup):', err);
       }
     }
-    parseHash();
+    parseHashTokens();
   }, []);
 
-  // HANDLERS
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -63,7 +58,7 @@ const ProfessionalSignup = () => {
     const { data, error } = await supabase.auth.signInWithOtp({
       email: formData.email,
       options: {
-        emailRedirectTo: 'https://tradehub24.vercel.app/professional/login',
+        emailRedirectTo: 'https://www.tradehub24.com/professional/login',
         data: {
           user_type: 'professional',
           phone: formData.phone,
@@ -88,7 +83,7 @@ const ProfessionalSignup = () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'https://tradehub24.vercel.app/professional/login',
+        redirectTo: 'https://www.tradehub24.com/professional/login',
       },
     });
     if (error) alert(error.message);
@@ -103,21 +98,17 @@ const ProfessionalSignup = () => {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        emailRedirectTo: 'https://tradehub24.vercel.app/professional/login',
-        data: {
-          user_type: 'professional',
-          phone: formData.phone,
-          postcode: formData.postcode,
-          companyName: formData.companyName,
-          trade: formData.trade,
-          businessRegistration: formData.businessRegistration,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-        },
+    const { data, error } = await signUpWithEmail(formData.email, formData.password, {
+      emailRedirectTo: 'https://www.tradehub24.com/professional/login',
+      data: {
+        user_type: 'professional',
+        phone: formData.phone,
+        postcode: formData.postcode,
+        companyName: formData.companyName,
+        trade: formData.trade,
+        businessRegistration: formData.businessRegistration,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
       },
     });
 
@@ -386,7 +377,7 @@ const ProfessionalSignup = () => {
 
           {/* Additional Buttons (Email OTP, Google) */}
           <div className="mt-6 space-y-2">
-            {/* Email OTP Button (unchanged) */}
+            {/* Email OTP */}
             <button
               type="button"
               onClick={handleSignUpWithOTP}
@@ -396,7 +387,7 @@ const ProfessionalSignup = () => {
               Sign Up with Email OTP
             </button>
 
-            {/* Google Button with typical design */}
+            {/* Google Button */}
             <button
               type="button"
               onClick={handleSignUpWithGoogle}
@@ -422,15 +413,11 @@ const ProfessionalSignup = () => {
                 focus:ring-gray-500
               "
             >
-              {/* Inline Google SVG Icon */}
-              <svg
+              <img
+                src="/src/assets/googlepng.png"
+                alt="Google Logo"
                 className="h-5 w-5 mr-2"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="-0.5 0 48 48"
-                version="1.1"
-              >
-                {/* (SVG path content) */}
-              </svg>
+              />
               <span>Continue with Google</span>
             </button>
           </div>

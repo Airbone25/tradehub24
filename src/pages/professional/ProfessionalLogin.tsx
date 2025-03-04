@@ -1,53 +1,44 @@
 // src/pages/professional/ProfessionalLogin.tsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../services/supabaseClient';
+import { signInWithEmail } from '../../services/authService';
 import { Mail, Lock } from 'lucide-react';
 
 const ProfessionalLogin = () => {
   const navigate = useNavigate();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // -- 1) PARSE HASH FOR ACCESS/REFRESH
+  // MANUAL PARSE OF #access_token / #refresh_token
   useEffect(() => {
-    async function parseHash() {
-      try {
-        const url = new URL(window.location.href);
-        const hashParams = new URLSearchParams(url.hash.slice(1));
+    async function parseHashTokens() {
+      if (window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
-
         if (accessToken && refreshToken) {
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
           if (error) {
-            console.error('Error setting session (ProfessionalLogin):', error.message);
+            console.error('Error setting session from hash (ProfessionalLogin):', error.message);
           } else {
-            console.log('Session stored from URL (ProfessionalLogin):', data?.session);
-            // Remove hash from URL
-            url.hash = '';
-            window.history.replaceState({}, document.title, url.toString());
-            // Optionally navigate('/professional/dashboard');
+            console.log('Session stored from hash (ProfessionalLogin):', data);
           }
+          // remove hash
+          window.history.replaceState({}, document.title, window.location.pathname);
         }
-      } catch (err) {
-        console.error('Exception parsing session from URL (ProfessionalLogin):', err);
       }
     }
-    parseHash();
+    parseHashTokens();
   }, []);
 
   // Email+Password
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error } = await signInWithEmail(email, password);
 
     if (error) {
       alert(error.message);
@@ -70,7 +61,7 @@ const ProfessionalLogin = () => {
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: 'https://tradehub24.vercel.app/professional/login',
+        emailRedirectTo: 'https://www.tradehub24.com/professional/login',
       },
     });
     if (error) {
@@ -85,7 +76,7 @@ const ProfessionalLogin = () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'https://tradehub24.vercel.app/professional/login',
+        redirectTo: 'https://www.tradehub24.com/professional/login',
       },
     });
     if (error) {
@@ -191,7 +182,7 @@ const ProfessionalLogin = () => {
 
           {/* Additional Buttons (Email OTP, Google) */}
           <div className="mt-6 space-y-2">
-            {/* Email OTP button */}
+            {/* Email OTP */}
             <button
               type="button"
               onClick={handleLoginWithOTP}
@@ -227,14 +218,11 @@ const ProfessionalLogin = () => {
                 focus:ring-gray-500
               "
             >
-              <svg
+              <img
+                src="/src/assets/googlepng.png"
+                alt="Google Logo"
                 className="h-5 w-5 mr-2"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="-0.5 0 48 48"
-                version="1.1"
-              >
-                {/* (SVG path content) */}
-              </svg>
+              />
               <span>Continue with Google</span>
             </button>
           </div>

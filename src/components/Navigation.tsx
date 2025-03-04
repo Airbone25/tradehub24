@@ -1,4 +1,3 @@
-// src/components/Navigation.tsx
 import React, { useContext, useState } from 'react';
 import { Menu, X, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -157,5 +156,3 @@ export function Navigation() {
     </nav>
   );
 }
-
-export default Navigation;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Calendar, Clock, MapPin, Briefcase, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
 
-export function JobManagement() {
+export default function JobManagement() {
   return (
     <div className="py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
