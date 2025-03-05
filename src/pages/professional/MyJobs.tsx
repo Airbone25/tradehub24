@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../services/supabaseClient';
 import { FaSearch, FaFilter, FaMapMarkerAlt, FaCalendarAlt, FaDollarSign, FaTools, FaExternalLinkAlt, FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
@@ -15,11 +15,19 @@ interface Job {
   created_at: string;
   status: string;
   homeowner: {
+    id: string;
     first_name: string;
     last_name: string;
   } | null;
   interest_status: string;
   quote_amount: number | null;
+}
+
+interface Interest {
+  status: string;
+  quote_amount: number | null;
+  jobs: Job;
+  user_id: string;
 }
 
 const MyJobs: React.FC = () => {
@@ -52,6 +60,7 @@ const MyJobs: React.FC = () => {
           jobs(
             *,
             homeowner:homeowner_profiles!jobs_homeowner_id_fkey(
+              id,
               first_name,
               last_name
             )
@@ -63,8 +72,8 @@ const MyJobs: React.FC = () => {
       if (interestsError) throw interestsError;
       
       // Transform the data to the format we need
-      const transformedJobs = interestsData?.map(interest => {
-        const job = interest.jobs as any;
+      const transformedJobs = interestsData?.map((interest) => {
+        const job = interest.jobs;
         return {
           ...job,
           interest_status: interest.status,
@@ -292,7 +301,7 @@ const MyJobs: React.FC = () => {
                         
                         {job.interest_status === 'selected' && (
                           <Link
-                            to={`/professional/messages/${job.homeowner?.first_name ? job.homeowner_id : ''}`}
+                            to={`/professional/messages/${job.homeowner?.id || ''}`}
                             className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                           >
                             Message Homeowner
