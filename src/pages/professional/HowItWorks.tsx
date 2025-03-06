@@ -1,3 +1,4 @@
+// src/pages/professional/HowItWorks.tsx
 import React from 'react';
 import { CheckCircle2, ArrowRight } from 'lucide-react';
 

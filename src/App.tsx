@@ -78,6 +78,7 @@ import ReviewsProfessional from './pages/professional/Reviews';
 import Subscription from './pages/professional/Subscription';
 import ProfessionalSettings from './pages/professional/Settings';
 import FindJobs from './pages/professional/FindJobs';
+import { HowItWorks as ProfessionalHowItWorks } from './pages/professional/HowItWorks';
 
 function App() {
   return (
@@ -215,7 +216,7 @@ function App() {
               <Route path="/professional/login-otp-callback" element={<ProfessionalLoginOTP />} />
               
               {/* Public Professional Routes */}
-              <Route path="/professional/how-it-works" element={<ProfessionalHome />} />
+              <Route path="/professional/how-it-works" element={<ProfessionalHowItWorks />} />
               <Route path="/professional/find-jobs" element={<FindJobs />} />
               <Route path="/professional/membership" element={<Subscription />} />
               

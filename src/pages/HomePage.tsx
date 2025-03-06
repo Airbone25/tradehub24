@@ -1,9 +1,11 @@
-import React from 'react';
-import { Shield, Clock, Star } from 'lucide-react';
+import React, { useContext } from 'react';
+import { Shield, Clock, Star, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import man1Image from '../assets/man-1.png';
+import { UserTypeContext } from '../context/UserTypeContext';
+import { ProfessionalHome } from './professional/ProfessionalHome';
 
-const testimonials = [
+const homeownerTestimonials = [
   {
     id: '1',
     name: 'Sarah Johnson',
@@ -32,13 +34,39 @@ const testimonials = [
   },
 ];
 
+const benefits = [
+  {
+    title: "Verified Professionals",
+    description: "Every professional on our platform is thoroughly vetted and background-checked for your peace of mind."
+  },
+  {
+    title: "Secure Payments",
+    description: "Our secure payment system protects both homeowners and professionals throughout the project."
+  },
+  {
+    title: "Quality Guarantee",
+    description: "We stand behind the quality of work with our satisfaction guarantee."
+  },
+  {
+    title: "24/7 Support",
+    description: "Our dedicated support team is available around the clock to help with any questions or concerns."
+  }
+];
+
 export function HomePage() {
+  const { userType } = useContext(UserTypeContext)!;
+  const isProfessional = userType === 'professional';
+
+  if (isProfessional) {
+    return <ProfessionalHome />;
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
       <section
         className="relative bg-[#105298] text-white py-20 flex items-center"
-        style={{ minHeight: '587px' }} // Minimal change: ensures a tall area for the hero
+        style={{ minHeight: '587px' }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -50,15 +78,17 @@ export function HomePage() {
                 Connect with verified local trade professionals for all your home improvement needs.
               </p>
               <div className="max-w-3xl">
-                <div className="flex flex-col md:flex-row gap-4 bg-white rounded-lg p-2">
-                  <input
-                    type="text"
-                    placeholder="What service do you need?"
-                    className="flex-grow px-4 py-3 text-gray-900 rounded-md focus:outline-none"
-                  />
-                  <button className="bg-[#e20000] text-white px-8 py-3 rounded-md hover:bg-[#cc0000] transition-colors">
-                    Find Pros
-                  </button>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex flex-col md:flex-row gap-4 bg-white rounded-lg p-2 w-full">
+                    <input
+                      type="text"
+                      placeholder="What service do you need?"
+                      className="flex-grow px-4 py-3 text-gray-900 rounded-md focus:outline-none"
+                    />
+                    <button className="bg-[#e20000] text-white px-8 py-3 rounded-md hover:bg-[#cc0000] transition-colors">
+                      Find Pros
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -105,7 +135,7 @@ export function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12">What Our Customers Say</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
+            {homeownerTestimonials.map((testimonial) => (
               <div key={testimonial.id} className="bg-white p-6 rounded-lg shadow-md">
                 <div className="flex items-center mb-4">
                   <img
@@ -131,9 +161,12 @@ export function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to Start Your Project?</h2>
           <p className="text-xl mb-8">Join thousands of satisfied customers today.</p>
-          <button className="bg-[#e20000] text-white px-8 py-3 rounded-md hover:bg-[#cc0000] transition-colors">
+          <Link
+            to="/find-pros"
+            className="bg-[#e20000] text-white px-8 py-3 rounded-md hover:bg-[#cc0000] transition-colors inline-block"
+          >
             Find Professionals Now
-          </button>
+          </Link>
         </div>
       </section>
     </div>
