@@ -1,25 +1,20 @@
 // src/pages/homeowner/HomeownerLogin.tsx
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
+import { signInWithEmail } from '../../services/authService';
 import { checkIfEmailExists } from '../../services/emailService';
 import { toast } from 'react-toastify';
-
 import { Mail, Lock } from 'lucide-react';
 
 const HomeownerLogin = () => {
   const navigate = useNavigate();
-
-  // Form fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  // Loading & error states
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // --- 1. Parse #access_token / #refresh_token (from second snippet) ---
+  // Parse #access_token / #refresh_token
   useEffect(() => {
     async function parseHashTokens() {
       if (window.location.hash) {
@@ -36,7 +31,7 @@ const HomeownerLogin = () => {
           } else {
             console.log('Session stored from hash (HomeownerLogin):', data);
           }
-          // remove hash from URL
+          // remove hash
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
@@ -44,151 +39,79 @@ const HomeownerLogin = () => {
     parseHashTokens();
   }, []);
 
-  // --- 2. Pre-check logic (from first snippet) ---
   const handlePreCheck = async (checkEmail: string) => {
     try {
       const { exists, userType } = await checkIfEmailExists(checkEmail);
       if (!exists) {
-        toast.error('No account found with this email. Please sign up.', {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-        navigate('/homeowner/signup', {
-          state: { message: 'Account not found. Please sign up.', email: checkEmail },
-        });
+        toast.error('No account found. Please sign up.');
+        navigate('/homeowner/signup', { state: { email: checkEmail } });
         return false;
       }
-      if (userType && userType !== 'homeowner') {
-        toast.error('This email is registered as a professional. Please use the professional login.', {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-        setErrorMessage(
-          'This email is registered as a professional. Please use the professional login.'
-        );
+      if (userType !== 'homeowner') {
+        toast.error('Email belongs to a professional account. Use professional login.');
+        setErrorMessage('This email is registered as a professional. Please use the professional login.');
         return false;
       }
       return true;
     } catch (err: any) {
-      const errorMsg = err.message || 'Error checking email';
-      toast.error(errorMsg, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      setErrorMessage(errorMsg);
+      toast.error(err.message || 'Error checking email');
+      setErrorMessage(err.message);
       return false;
     }
   };
 
-  // --- 3. Handle login with password (combine second snippet's design with first snippet's logic) ---
   const handleLoginWithPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setLoading(true);
 
     try {
-      // 1. Pre-check
       const canProceed = await handlePreCheck(email);
       if (!canProceed) {
         setLoading(false);
         return;
       }
+      const { data, error } = await signInWithEmail(email, password);
+      if (error) throw new Error(error);
 
-      // 2. Actually sign in
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      // 3. On success
-      if (data?.user) {
-        toast.success('Login successful!', {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-        navigate('/homeowner/dashboard'); // or wherever you want after login
+      // Confirm user type is homeowner
+      const sessionRes = await supabase.auth.getSession();
+      const user = sessionRes.data.session?.user;
+      if (user?.user_metadata?.user_type !== 'homeowner') {
+        await supabase.auth.signOut();
+        throw new Error('Access denied: you are not a homeowner.');
       }
+      toast.success('Login successful!');
+      navigate('/homeowner/dashboard');
     } catch (err: any) {
-      const errorMsg = err.message || 'An error occurred during login';
-      toast.error(errorMsg, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      setErrorMessage(errorMsg);
+      toast.error(err.message);
+      setErrorMessage(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // --- 4. Handle login with OTP (Magic Link) ---
   const handleLoginWithOTP = async () => {
     setErrorMessage('');
     if (!email) {
-      toast.error('Please enter your email', {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      toast.error('Please enter your email');
       return;
     }
-
     try {
       const canProceed = await handlePreCheck(email);
       if (!canProceed) return;
 
-      // Instead of directly sending OTP, we’ll navigate to a separate page
-      // so user can enter email for magic link. 
-      // OR if you want to do it in one step:
-      // const { data, error } = await supabase.auth.signInWithOtp(...)
-
+      // Just navigate to the OTP page
       navigate('/homeowner/login-otp', { state: { email } });
-    } catch (error: any) {
-      const errorMsg = error.message || 'An error occurred';
-      toast.error(errorMsg, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      setErrorMessage(errorMsg);
+    } catch (err: any) {
+      toast.error(err.message);
+      setErrorMessage(err.message);
     }
   };
 
-  // --- 5. Handle login with Google OAuth ---
   const handleLoginWithGoogle = async () => {
     setErrorMessage('');
     try {
-      // optional: you can do a preCheck if you want to confirm user is homeowner
-      // but with OAuth, it's tricky to pre-check the email. 
-      // So you might do the check after the user logs in.
-
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -200,19 +123,9 @@ const HomeownerLogin = () => {
         },
       });
       if (error) throw error;
-      // The user is redirected to Google; upon success, they'll come back 
-      // with #access_token => parseHashTokens => set session
     } catch (err: any) {
-      const errorMsg = err.message || 'An error occurred during Google login';
-      toast.error(errorMsg, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      setErrorMessage(errorMsg);
+      toast.error(err.message);
+      setErrorMessage(err.message);
     }
   };
 
@@ -225,18 +138,15 @@ const HomeownerLogin = () => {
         </h2>
       </div>
 
-      {/* Form Container */}
+      {/* Form */}
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-md rounded-lg sm:px-10">
-
-          {/* Show error message if any */}
           {errorMessage && (
             <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">
               {errorMessage}
             </div>
           )}
 
-          {/* Main form */}
           <form className="space-y-6" onSubmit={handleLoginWithPassword}>
             {/* Email */}
             <div>
@@ -255,7 +165,7 @@ const HomeownerLogin = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm
-                             placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
@@ -277,12 +187,12 @@ const HomeownerLogin = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm
-                             placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
 
-            {/* Remember me + forgot password */}
+            {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -302,15 +212,15 @@ const HomeownerLogin = () => {
               </div>
             </div>
 
-            {/* Submit */}
+            {/* Sign In Button */}
             <div>
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm
-                           text-sm font-medium text-white bg-[#e20000] hover:bg-[#cc0000]
-                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#105298]
-                           disabled:opacity-50"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm 
+                  text-sm font-medium text-white bg-[#e20000] hover:bg-[#cc0000] 
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#105298] 
+                  disabled:opacity-50"
               >
                 {loading ? 'Signing in...' : 'Sign in'}
               </button>
@@ -331,23 +241,21 @@ const HomeownerLogin = () => {
 
           {/* Additional Buttons */}
           <div className="mt-6 space-y-2">
-            {/* Magic Link (Email OTP) */}
             <button
               type="button"
               onClick={handleLoginWithOTP}
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm
-                         text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm 
+                text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
             >
               Login with Email OTP
             </button>
 
-            {/* Google OAuth */}
             <button
               type="button"
               onClick={handleLoginWithGoogle}
               className="w-full flex items-center justify-center border border-gray-300 rounded-md shadow-sm
-                         px-6 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50
-                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                px-6 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
               <img
                 src="/src/assets/googlepng.png"

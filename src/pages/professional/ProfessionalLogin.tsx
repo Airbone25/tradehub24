@@ -1,4 +1,5 @@
 // src/pages/professional/ProfessionalLogin.tsx
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
@@ -10,7 +11,7 @@ const ProfessionalLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // MANUAL PARSE OF #access_token / #refresh_token
+  // Parse #access_token / #refresh_token
   useEffect(() => {
     async function parseHashTokens() {
       if (window.location.hash) {
@@ -23,11 +24,13 @@ const ProfessionalLogin = () => {
             refresh_token: refreshToken,
           });
           if (error) {
-            console.error('Error setting session from hash (ProfessionalLogin):', error.message);
+            console.error(
+              'Error setting session from hash (ProfessionalLogin):',
+              error.message
+            );
           } else {
             console.log('Session stored from hash (ProfessionalLogin):', data);
           }
-          // remove hash
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
@@ -35,7 +38,6 @@ const ProfessionalLogin = () => {
     parseHashTokens();
   }, []);
 
-  // Email+Password
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { data, error } = await signInWithEmail(email, password);
@@ -43,25 +45,22 @@ const ProfessionalLogin = () => {
     if (error) {
       alert(error.message);
     } else {
-      // Post-check user_type
+      // Confirm user_type
       const sessionRes = await supabase.auth.getSession();
       const user = sessionRes.data?.session?.user;
       if (user?.user_metadata?.user_type !== 'professional') {
         await supabase.auth.signOut();
         alert('Access denied: you are not a professional user.');
       } else {
-        // navigate to professional route
         navigate('/professional/dashboard');
       }
     }
   };
 
-  // Email OTP
   const handleLoginWithOTP = () => {
     navigate('/professional/login-otp');
   };
 
-  // Google login
   const handleLoginWithGoogle = async () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -83,7 +82,10 @@ const ProfessionalLogin = () => {
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Don't have an account?{' '}
-          <Link to="/professional/signup" className="font-medium text-[#105298] hover:text-blue-700">
+          <Link
+            to="/professional/signup"
+            className="font-medium text-[#105298] hover:text-blue-700"
+          >
             Sign up
           </Link>
         </p>
@@ -110,14 +112,17 @@ const ProfessionalLogin = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                             placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <div className="mt-1 relative">
@@ -132,7 +137,7 @@ const ProfessionalLogin = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                             placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
@@ -151,7 +156,10 @@ const ProfessionalLogin = () => {
                 </label>
               </div>
               <div className="text-sm">
-                <Link to="/forgot-password" className="font-medium text-[#105298] hover:text-blue-700">
+                <Link
+                  to="/forgot-password"
+                  className="font-medium text-[#105298] hover:text-blue-700"
+                >
                   Forgot your password?
                 </Link>
               </div>
@@ -162,8 +170,8 @@ const ProfessionalLogin = () => {
               <button
                 type="submit"
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm 
-                           text-sm font-medium text-white bg-[#e20000] hover:bg-[#cc0000] 
-                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#105298]"
+                  text-sm font-medium text-white bg-[#e20000] hover:bg-[#cc0000] 
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#105298]"
               >
                 Sign in
               </button>
@@ -177,7 +185,7 @@ const ProfessionalLogin = () => {
               type="button"
               onClick={handleLoginWithOTP}
               className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm 
-                         text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
             >
               Login with Email OTP
             </button>

@@ -1,4 +1,5 @@
 // src/App.tsx
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
@@ -80,12 +81,23 @@ import ProfessionalSettings from './pages/professional/Settings';
 import FindJobs from './pages/professional/FindJobs';
 import { HowItWorks as ProfessionalHowItWorks } from './pages/professional/HowItWorks';
 
+// NEW: Additional pages for email confirmation & password resets
+import PleaseConfirmEmail from './pages/auth/PleaseConfirmEmail';
+import ResetPassword from './pages/auth/ResetPassword';
+import UpdatePassword from './pages/auth/UpdatePassword';
+
+// NEW: Multi-step professional registration
+import ProfessionalRegistrationStep2 from './pages/professional/ProfessionalRegistrationStep2';
+import ProfessionalRegistrationStep3 from './pages/professional/ProfessionalRegistrationStep3';
+import ProfessionalRegistrationStep4 from './pages/professional/ProfessionalRegistrationStep4';
+
 function App() {
   return (
-    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <Router>
       <UserProvider>
         <UserTypeProvider>
           <Layout>
+            {/* Toast container for react-toastify */}
             <ToastContainer
               position="top-right"
               autoClose={5000}
@@ -98,14 +110,15 @@ function App() {
               pauseOnHover
               theme="light"
             />
+
             <Routes>
-              {/* Dynamic Home route */}
+              {/* Home route */}
               <Route path="/" element={<HomePage />} />
 
               {/* Optional Test Route */}
               <Route path="/test-connection" element={<TestConnection />} />
 
-              {/* Public / Shared Routes */}
+              {/* Public / Shared */}
               <Route path="/about-us" element={<AboutUs />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
@@ -134,160 +147,260 @@ function App() {
               <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/legal/terms-and-conditions" element={<TermsAndConditions />} />
 
-              {/* Homeowner Routes */}
-              {/* Auth Routes (Public) */}
+              {/* NEW: Email confirmation & password reset */}
+              <Route path="/auth/please-confirm-email" element={<PleaseConfirmEmail />} />
+              <Route path="/auth/reset-password" element={<ResetPassword />} />
+              <Route path="/auth/update-password" element={<UpdatePassword />} />
+
+              {/* Homeowner Auth */}
               <Route path="/homeowner/signup" element={<HomeownerSignUp />} />
               <Route path="/homeowner/login" element={<HomeownerLogin />} />
               <Route path="/homeowner/login-otp" element={<HomeownerLoginOTP />} />
               <Route path="/homeowner/login-otp-callback" element={<HomeownerLoginOTP />} />
-              
-              {/* Public Homeowner Routes */}
-              <Route path="/homeowner/hiring-guide" element={<HiringGuide />} />
-              
-              {/* Routes that redirect to signup if not logged in */}
-              <Route path="/homeowner/post-job" element={
-                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/signup">
-                  <PostJob />
-                </ProtectedRoute>
-              } />
-              <Route path="/homeowner/support" element={
-                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/signup">
-                  <SupportHomeowner />
-                </ProtectedRoute>
-              } />
-              <Route path="/homeowner/complaints" element={
-                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/signup">
-                  <ComplaintsHomeowner />
-                </ProtectedRoute>
-              } />
-              
-              {/* Other Protected Homeowner Routes */}
-              <Route path="/homeowner/dashboard" element={
-                <ProtectedRoute requiredUserType="homeowner">
-                  <HomeownerDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/homeowner/profile" element={
-                <ProtectedRoute requiredUserType="homeowner">
-                  <HomeownerProfile />
-                </ProtectedRoute>
-              } />
-              <Route path="/homeowner/messages" element={
-                <ProtectedRoute requiredUserType="homeowner">
-                  <HomeownerMessages />
-                </ProtectedRoute>
-              } />
-              <Route path="/homeowner/job-details" element={
-                <ProtectedRoute requiredUserType="homeowner">
-                  <JobDetails />
-                </ProtectedRoute>
-              } />
-              <Route path="/homeowner/professional-search" element={
-                <ProtectedRoute requiredUserType="homeowner">
-                  <ProfessionalSearch />
-                </ProtectedRoute>
-              } />
-              <Route path="/homeowner/reviews-and-ratings" element={
-                <ProtectedRoute requiredUserType="homeowner">
-                  <ReviewsAndRatings />
-                </ProtectedRoute>
-              } />
-              <Route path="/homeowner/payment-history" element={
-                <ProtectedRoute requiredUserType="homeowner">
-                  <HomeownerPaymentHistory />
-                </ProtectedRoute>
-              } />
-              <Route path="/homeowner/notifications" element={
-                <ProtectedRoute requiredUserType="homeowner">
-                  <Notifications />
-                </ProtectedRoute>
-              } />
-              <Route path="/homeowner/settings" element={
-                <ProtectedRoute requiredUserType="homeowner">
-                  <HomeownerSettings />
-                </ProtectedRoute>
-              } />
 
-              {/* Professional Routes */}
-              {/* Auth Routes (Public) */}
+              {/* Public Homeowner */}
+              <Route path="/homeowner/hiring-guide" element={<HiringGuide />} />
+
+              {/* Protected Homeowner */}
+              <Route
+                path="/homeowner/post-job"
+                element={
+                  <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/signup">
+                    <PostJob />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/homeowner/support"
+                element={
+                  <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/signup">
+                    <SupportHomeowner />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/homeowner/complaints"
+                element={
+                  <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/signup">
+                    <ComplaintsHomeowner />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/homeowner/dashboard"
+                element={
+                  <ProtectedRoute requiredUserType="homeowner">
+                    <HomeownerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/homeowner/profile"
+                element={
+                  <ProtectedRoute requiredUserType="homeowner">
+                    <HomeownerProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/homeowner/messages"
+                element={
+                  <ProtectedRoute requiredUserType="homeowner">
+                    <HomeownerMessages />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/homeowner/job-details"
+                element={
+                  <ProtectedRoute requiredUserType="homeowner">
+                    <JobDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/homeowner/professional-search"
+                element={
+                  <ProtectedRoute requiredUserType="homeowner">
+                    <ProfessionalSearch />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/homeowner/reviews-and-ratings"
+                element={
+                  <ProtectedRoute requiredUserType="homeowner">
+                    <ReviewsAndRatings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/homeowner/payment-history"
+                element={
+                  <ProtectedRoute requiredUserType="homeowner">
+                    <HomeownerPaymentHistory />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/homeowner/notifications"
+                element={
+                  <ProtectedRoute requiredUserType="homeowner">
+                    <Notifications />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/homeowner/settings"
+                element={
+                  <ProtectedRoute requiredUserType="homeowner">
+                    <HomeownerSettings />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Professional Auth */}
               <Route path="/professional/signup" element={<ProfessionalSignUp />} />
               <Route path="/professional/login" element={<ProfessionalLogin />} />
               <Route path="/professional/login-otp" element={<ProfessionalLoginOTP />} />
               <Route path="/professional/login-otp-callback" element={<ProfessionalLoginOTP />} />
-              
-              {/* Public Professional Routes */}
+
+              {/* Public Professional */}
               <Route path="/professional/how-it-works" element={<ProfessionalHowItWorks />} />
               <Route path="/professional/find-jobs" element={<FindJobs />} />
               <Route path="/professional/membership" element={<Subscription />} />
-              
-              {/* Routes that redirect to signup if not logged in */}
-              <Route path="/professional/support" element={
-                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
-                  <ProfessionalSupport />
-                </ProtectedRoute>
-              } />
-              
-              {/* Protected Professional Routes */}
-              <Route path="/professional/dashboard" element={
-                <ProtectedRoute requiredUserType="professional">
-                  <ProfessionalDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/professional/complaints" element={
-                <ProtectedRoute requiredUserType="professional">
-                  <Complaints />
-                </ProtectedRoute>
-              } />
-              <Route path="/professional/professional-support" element={
-                <ProtectedRoute requiredUserType="professional">
-                  <ProfessionalSupport />
-                </ProtectedRoute>
-              } />
-              <Route path="/professional/profile" element={
-                <ProtectedRoute requiredUserType="professional">
-                  <ProfessionalProfile />
-                </ProtectedRoute>
-              } />
-              <Route path="/professional/messages" element={
-                <ProtectedRoute requiredUserType="professional">
-                  <ProfessionalMessages />
-                </ProtectedRoute>
-              } />
-              <Route path="/professional/bid-management" element={
-                <ProtectedRoute requiredUserType="professional">
-                  <BidManagement />
-                </ProtectedRoute>
-              } />
-              <Route path="/professional/job-search" element={
-                <ProtectedRoute requiredUserType="professional">
-                  <JobSearch />
-                </ProtectedRoute>
-              } />
-              <Route path="/professional/availability-calendar" element={
-                <ProtectedRoute requiredUserType="professional">
-                  <AvailabilityCalendar />
-                </ProtectedRoute>
-              } />
-              <Route path="/professional/payment-history" element={
-                <ProtectedRoute requiredUserType="professional">
-                  <ProfessionalPaymentHistory />
-                </ProtectedRoute>
-              } />
-              <Route path="/professional/reviews" element={
-                <ProtectedRoute requiredUserType="professional">
-                  <ReviewsProfessional />
-                </ProtectedRoute>
-              } />
-              <Route path="/professional/subscription" element={
-                <ProtectedRoute requiredUserType="professional">
-                  <Subscription />
-                </ProtectedRoute>
-              } />
-              <Route path="/professional/settings" element={
-                <ProtectedRoute requiredUserType="professional">
-                  <ProfessionalSettings />
-                </ProtectedRoute>
-              } />
+
+              {/* Protected Professional */}
+              <Route
+                path="/professional/support"
+                element={
+                  <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
+                    <ProfessionalSupport />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/dashboard"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <ProfessionalDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/complaints"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <Complaints />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/professional-support"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <ProfessionalSupport />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/profile"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <ProfessionalProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/messages"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <ProfessionalMessages />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/bid-management"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <BidManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/job-search"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <JobSearch />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/availability-calendar"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <AvailabilityCalendar />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/payment-history"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <ProfessionalPaymentHistory />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/reviews"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <ReviewsProfessional />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/subscription"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <Subscription />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/settings"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <ProfessionalSettings />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* NEW: Multi-step Professional Registration */}
+              <Route
+                path="/professional/registration-step2"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <ProfessionalRegistrationStep2 />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/registration-step3"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <ProfessionalRegistrationStep3 />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/professional/registration-step4"
+                element={
+                  <ProtectedRoute requiredUserType="professional">
+                    <ProfessionalRegistrationStep4 />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </Layout>
         </UserTypeProvider>

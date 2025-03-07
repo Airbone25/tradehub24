@@ -1,47 +1,56 @@
+// src/pages/professional/ProfessionalLoginOTP.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContext';
+import { supabase } from '../../services/supabaseClient';
+import { checkIfEmailExists } from '../../services/emailService';
+import { Link } from 'lucide-react';
 
 const ProfessionalLoginOTP: React.FC = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const { loginWithOTP, isAuthenticated, userType } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if we're on the callback page
   const isCallback = location.pathname.includes('callback');
 
   useEffect(() => {
-    // If user is already authenticated and is a professional, redirect to dashboard
-    if (isAuthenticated && userType === 'professional') {
-      navigate('/professional/dashboard');
+    if (location.state?.email) {
+      setEmail(location.state.email);
     }
-    // If user is authenticated but not a professional, redirect to appropriate dashboard
-    else if (isAuthenticated && userType === 'homeowner') {
-      navigate('/homeowner/dashboard');
-    }
-    
-    // Handle OTP callback
+  }, [location.state]);
+
+  useEffect(() => {
     if (isCallback) {
-      const handleOTPCallback = async () => {
-        setLoading(true);
+      setLoading(true);
+      (async () => {
         try {
-          // The OTP confirmation is handled automatically by Supabase Auth
-          setMessage({ type: 'success', text: 'Successfully authenticated! Redirecting...' });
-          // Redirect will happen in the useEffect above once auth state updates
-        } catch (error: any) {
-          console.error('Error during OTP callback:', error);
-          setMessage({ type: 'error', text: error.message || 'Failed to verify login link' });
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+          if (accessToken && refreshToken) {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (error) throw error;
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user?.user_metadata?.user_type !== 'professional') {
+              await supabase.auth.signOut();
+              throw new Error('Access denied: you are not a professional');
+            }
+            setMessage({ type: 'success', text: 'Successfully authenticated! Redirecting...' });
+            setTimeout(() => navigate('/professional/dashboard'), 1500);
+          }
+        } catch (err: any) {
+          setMessage({ type: 'error', text: err.message || 'Failed to verify login link' });
         } finally {
           setLoading(false);
         }
-      };
-
-      handleOTPCallback();
+      })();
     }
-  }, [isAuthenticated, userType, navigate, isCallback]);
+  }, [isCallback, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,17 +58,25 @@ const ProfessionalLoginOTP: React.FC = () => {
     setMessage(null);
 
     try {
-      await loginWithOTP(email, 'professional');
-      setMessage({ 
-        type: 'success', 
-        text: 'Magic link sent! Check your email for a login link.' 
+      const { exists, userType } = await checkIfEmailExists(email);
+      if (!exists) {
+        navigate('/professional/signup', { state: { email, message: 'Account not found. Please sign up.' } });
+        return;
+      }
+      if (userType !== 'professional') {
+        throw new Error('This email is registered as a homeowner. Please use the homeowner login.');
+      }
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/professional/login-otp-callback`,
+          data: { user_type: 'professional' },
+        },
       });
-    } catch (error: any) {
-      console.error('Login error:', error);
-      setMessage({ 
-        type: 'error', 
-        text: error.message || 'Failed to send magic link. Please try again.' 
-      });
+      if (error) throw error;
+      setMessage({ type: 'success', text: 'Magic link sent! Check your email.' });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Failed to send magic link.' });
     } finally {
       setLoading(false);
     }
@@ -74,14 +91,15 @@ const ProfessionalLoginOTP: React.FC = () => {
               Verifying your login
             </h2>
           </div>
-          
           <div className="mt-8 space-y-6">
             {loading ? (
               <div className="flex justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
               </div>
             ) : message ? (
-              <div className={`rounded-md p-4 ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+              <div className={`rounded-md p-4 ${
+                message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+              }`}>
                 {message.text}
               </div>
             ) : null}
@@ -102,13 +120,15 @@ const ProfessionalLoginOTP: React.FC = () => {
             Enter your email to receive a secure login link
           </p>
         </div>
-        
+
         {message && (
-          <div className={`rounded-md p-4 ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+          <div className={`rounded-md p-4 ${
+            message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+          }`}>
             {message.text}
           </div>
         )}
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
@@ -119,7 +139,9 @@ const ProfessionalLoginOTP: React.FC = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 
+                  placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 
+                  focus:z-10 sm:text-sm"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -131,22 +153,24 @@ const ProfessionalLoginOTP: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent 
+                text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none 
+                focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               {loading ? 'Sending...' : 'Send Magic Link'}
             </button>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="text-sm">
-              <a href="/professional/login" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="/professional/login" className="font-medium text-blue-600 hover:text-blue-500">
                 Login with password instead
-              </a>
+              </Link>
             </div>
             <div className="text-sm">
-              <a href="/professional/signup" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="/professional/signup" className="font-medium text-blue-600 hover:text-blue-500">
                 Sign up
-              </a>
+              </Link>
             </div>
           </div>
         </form>

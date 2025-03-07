@@ -1,27 +1,25 @@
+// src/services/emailService.ts
 import { supabase } from './supabaseClient';
 
-export const checkIfEmailExists = async (email: string): Promise<{ exists: boolean; userType?: 'homeowner' | 'professional' }> => {
+// Check if an email is registered; returns userType if found
+export const checkIfEmailExists = async (
+  email: string
+): Promise<{ exists: boolean; userType?: 'homeowner' | 'professional' }> => {
   try {
-    // Check in auth.users table
-    const { data: user, error: userError } = await supabase.auth.admin.listUsers({
-      filters: {
-        email: email
-      }
+    const { data: userList, error: listError } = await supabase.auth.admin.listUsers({
+      filters: { email },
     });
-
-    if (userError) {
-      console.error('Error checking user:', userError);
+    if (listError) {
+      console.error('Error checking user:', listError);
       return { exists: false };
     }
-
-    if (user?.users?.length > 0) {
-      const userMetadata = user.users[0].user_metadata;
-      return { 
-        exists: true, 
-        userType: userMetadata?.user_type as 'homeowner' | 'professional' 
+    if (userList?.users?.length > 0) {
+      const userMetadata = userList.users[0].user_metadata;
+      return {
+        exists: true,
+        userType: userMetadata?.user_type as 'homeowner' | 'professional',
       };
     }
-
     return { exists: false };
   } catch (error: any) {
     console.error('Error checking email existence:', error);

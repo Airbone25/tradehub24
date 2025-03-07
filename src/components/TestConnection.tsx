@@ -8,7 +8,7 @@ function TestConnection() {
   async function checkConnection() {
     // Query your newly created table (e.g. "test_table")
     const { data, error } = await supabase
-      .from('test_table')  // or whatever table name you used
+      .from('users')  // or whatever table name you used
       .select('*')
       .limit(1);
 

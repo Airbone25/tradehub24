@@ -1,3 +1,4 @@
+// src/pages/homeowner/HomeownerLoginOTP.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
@@ -11,10 +12,8 @@ const HomeownerLoginOTP: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if we're on the callback page
   const isCallback = location.pathname.includes('callback');
 
-  // Get email from location state if available
   useEffect(() => {
     if (location.state?.email) {
       setEmail(location.state.email);
@@ -24,41 +23,36 @@ const HomeownerLoginOTP: React.FC = () => {
   useEffect(() => {
     // Handle OTP callback
     if (isCallback) {
-      const handleOTPCallback = async () => {
-        setLoading(true);
+      setLoading(true);
+      // Because Supabase v2 automatically sets session upon returning with #access_token,
+      // we can show a "Verifying" spinner or message.
+      (async () => {
         try {
-          // Get the tokens from the URL hash
           const hashParams = new URLSearchParams(window.location.hash.substring(1));
           const accessToken = hashParams.get('access_token');
           const refreshToken = hashParams.get('refresh_token');
-
           if (accessToken && refreshToken) {
             const { data, error } = await supabase.auth.setSession({
               access_token: accessToken,
-              refresh_token: refreshToken
+              refresh_token: refreshToken,
             });
-
             if (error) throw error;
 
-            // Verify user type
+            // Check user type
             const { data: { user } } = await supabase.auth.getUser();
             if (user?.user_metadata?.user_type !== 'homeowner') {
               await supabase.auth.signOut();
               throw new Error('Access denied: you are not a homeowner');
             }
-
             setMessage({ type: 'success', text: 'Successfully authenticated! Redirecting...' });
             setTimeout(() => navigate('/homeowner/dashboard'), 1500);
           }
-        } catch (error: any) {
-          console.error('Error during OTP callback:', error);
-          setMessage({ type: 'error', text: error.message || 'Failed to verify login link' });
+        } catch (err: any) {
+          setMessage({ type: 'error', text: err.message || 'Failed to verify login link' });
         } finally {
           setLoading(false);
         }
-      };
-
-      handleOTPCallback();
+      })();
     }
   }, [isCallback, navigate]);
 
@@ -68,45 +62,33 @@ const HomeownerLoginOTP: React.FC = () => {
     setMessage(null);
 
     try {
-      // Check if email exists and is a homeowner
       const { exists, userType } = await checkIfEmailExists(email);
       if (!exists) {
-        navigate('/homeowner/signup', { 
-          state: { message: 'Account not found. Please sign up.', email } 
-        });
+        navigate('/homeowner/signup', { state: { email, message: 'Account not found. Please sign up.' } });
         return;
       }
-      if (userType && userType !== 'homeowner') {
+      if (userType !== 'homeowner') {
         throw new Error('This email is registered as a professional. Please use the professional login.');
       }
-
       // Send magic link
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           emailRedirectTo: `${window.location.origin}/homeowner/login-otp-callback`,
-          data: { user_type: 'homeowner' }
-        }
+          data: { user_type: 'homeowner' },
+        },
       });
-
       if (error) throw error;
-
-      setMessage({ 
-        type: 'success', 
-        text: 'Magic link sent! Check your email for a login link.' 
-      });
-    } catch (error: any) {
-      console.error('Login error:', error);
-      setMessage({ 
-        type: 'error', 
-        text: error.message || 'Failed to send magic link. Please try again.' 
-      });
+      setMessage({ type: 'success', text: 'Magic link sent! Check your email.' });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Failed to send magic link.' });
     } finally {
       setLoading(false);
     }
   };
 
   if (isCallback) {
+    // Show verifying screen
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
@@ -115,14 +97,17 @@ const HomeownerLoginOTP: React.FC = () => {
               Verifying your login
             </h2>
           </div>
-          
           <div className="mt-8 space-y-6">
             {loading ? (
               <div className="flex justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
               </div>
             ) : message ? (
-              <div className={`rounded-md p-4 ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+              <div
+                className={`rounded-md p-4 ${
+                  message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                }`}
+              >
                 {message.text}
               </div>
             ) : null}
@@ -132,6 +117,7 @@ const HomeownerLoginOTP: React.FC = () => {
     );
   }
 
+  // Normal OTP request form
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -143,13 +129,17 @@ const HomeownerLoginOTP: React.FC = () => {
             Enter your email to receive a secure login link
           </p>
         </div>
-        
+
         {message && (
-          <div className={`rounded-md p-4 ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+          <div
+            className={`rounded-md p-4 ${
+              message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+            }`}
+          >
             {message.text}
           </div>
         )}
-        
+
         <div className="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
