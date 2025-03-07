@@ -162,30 +162,9 @@ function App() {
               <Route path="/homeowner/hiring-guide" element={<HiringGuide />} />
 
               {/* Protected Homeowner */}
-              <Route
-                path="/homeowner/post-job"
-                element={
-                  <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/signup">
-                    <PostJob />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/homeowner/support"
-                element={
-                  <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/signup">
-                    <SupportHomeowner />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/homeowner/complaints"
-                element={
-                  <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/signup">
-                    <ComplaintsHomeowner />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/homeowner/post-job" element={<PostJob />} />
+              <Route path="/homeowner/support" element={<SupportHomeowner />} />
+              <Route path="/homeowner/complaints" element={<ComplaintsHomeowner />} />
               <Route
                 path="/homeowner/dashboard"
                 element={
@@ -271,35 +250,13 @@ function App() {
               <Route path="/professional/membership" element={<Subscription />} />
 
               {/* Protected Professional */}
-              <Route
-                path="/professional/support"
-                element={
-                  <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
-                    <ProfessionalSupport />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/professional/professional-support" element={<ProfessionalSupport />} />
+              <Route path="/professional/complaints" element={<Complaints />} />
               <Route
                 path="/professional/dashboard"
                 element={
                   <ProtectedRoute requiredUserType="professional">
                     <ProfessionalDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/professional/complaints"
-                element={
-                  <ProtectedRoute requiredUserType="professional">
-                    <Complaints />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/professional/professional-support"
-                element={
-                  <ProtectedRoute requiredUserType="professional">
-                    <ProfessionalSupport />
                   </ProtectedRoute>
                 }
               />
