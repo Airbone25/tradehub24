@@ -1,7 +1,8 @@
 // src/components/Navigation.tsx
 import React, { useContext, useState } from 'react';
-import { Menu, X, User } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import logoImage from '../assets/logo-image.png';
 import logoName from '../assets/logo-name.png';
 import { UserTypeContext, UserType } from '../context/UserTypeContext';
@@ -24,9 +25,14 @@ export function Navigation() {
   };
 
   const handleLogout = async () => {
-    await logout();
-    setIsOpen(false);
-    navigate('/');
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+      setIsOpen(false);
+      navigate('/');
+    } catch (error) {
+      toast.error('Failed to log out. Please try again.');
+    }
   };
 
   return (
@@ -82,6 +88,7 @@ export function Navigation() {
                   className="inline-flex items-center px-4 py-2 border border-transparent 
                     text-sm font-medium rounded-md text-white bg-[#e20000] hover:bg-[#cc0000]"
                 >
+                  <LogOut className="h-4 w-4 mr-2" />
                   Logout
                 </button>
               </>
@@ -142,25 +149,49 @@ export function Navigation() {
 
             {currentUserType === 'homeowner' ? (
               <>
-                <Link to="/how-it-works" className="block px-3 py-2 text-gray-700">
+                <Link 
+                  to="/how-it-works" 
+                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50"
+                  onClick={() => setIsOpen(false)}
+                >
                   How It Works
                 </Link>
-                <Link to="/services" className="block px-3 py-2 text-gray-700">
+                <Link 
+                  to="/services" 
+                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50"
+                  onClick={() => setIsOpen(false)}
+                >
                   Services
                 </Link>
-                <Link to="/find-pros" className="block px-3 py-2 text-gray-700">
+                <Link 
+                  to="/find-pros" 
+                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50"
+                  onClick={() => setIsOpen(false)}
+                >
                   Find Pros
                 </Link>
               </>
             ) : (
               <>
-                <Link to="/professional/how-it-works" className="block px-3 py-2 text-gray-700">
+                <Link 
+                  to="/professional/how-it-works" 
+                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50"
+                  onClick={() => setIsOpen(false)}
+                >
                   How It Works
                 </Link>
-                <Link to="/professional/find-jobs" className="block px-3 py-2 text-gray-700">
+                <Link 
+                  to="/professional/find-jobs" 
+                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50"
+                  onClick={() => setIsOpen(false)}
+                >
                   Find Jobs
                 </Link>
-                <Link to="/professional/membership" className="block px-3 py-2 text-gray-700">
+                <Link 
+                  to="/professional/membership" 
+                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50"
+                  onClick={() => setIsOpen(false)}
+                >
                   Membership
                 </Link>
               </>
@@ -170,33 +201,39 @@ export function Navigation() {
               <>
                 <Link
                   to={`/${currentUserType}/dashboard`}
-                  className="block px-3 py-2 text-gray-700"
+                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50"
                   onClick={() => setIsOpen(false)}
                 >
                   Dashboard
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="block w-full text-left px-3 py-2 text-gray-700"
+                  className="block w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-50"
                 >
-                  Logout
+                  <div className="flex items-center">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </div>
                 </button>
               </>
             ) : (
               <>
                 <Link
                   to={`/${currentUserType}/signup`}
-                  className="block px-3 py-2 text-gray-700"
+                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50"
                   onClick={() => setIsOpen(false)}
                 >
                   Sign Up
                 </Link>
                 <Link
                   to={`/${currentUserType}/login`}
-                  className="block px-3 py-2 text-gray-700"
+                  className="block px-3 py-2 text-gray-700 hover:bg-gray-50"
                   onClick={() => setIsOpen(false)}
                 >
-                  Login
+                  <div className="flex items-center">
+                    <User className="h-4 w-4 mr-2" />
+                    Login
+                  </div>
                 </Link>
               </>
             )}

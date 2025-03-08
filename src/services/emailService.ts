@@ -8,17 +8,28 @@ export const checkIfEmailExists = async (
   email: string
 ): Promise<{ exists: boolean; userType?: 'homeowner' | 'professional' | 'admin' }> => {
   try {
+    // First check auth system
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false }
+    });
+
+    // If we get an error about user not found, the email doesn't exist
+    if (signInError?.message?.includes('Email not found')) {
+      return { exists: false };
+    }
+
     // Check profiles table
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('user_type, email')
-      .eq('email', email)
+      .eq('email', email.toLowerCase())
       .single();
 
     if (profileError) {
       if (profileError.code === 'PGRST116') {
-        // No match found
-        return { exists: false };
+        // Profile doesn't exist but user might exist in auth
+        return { exists: true };
       }
       throw profileError;
     }
@@ -30,10 +41,13 @@ export const checkIfEmailExists = async (
       };
     }
 
-    return { exists: false };
+    // If we get here, the user exists in auth but not in profiles
+    return { exists: true };
   } catch (error: any) {
     console.error('Error checking email existence:', error);
-    throw new Error(error.message || 'Error checking email');
+    // If it's not a "user not found" error, assume the email exists
+    // to prevent information disclosure
+    return { exists: true };
   }
 };
 

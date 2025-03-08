@@ -55,23 +55,32 @@ export const signUpWithEmail = async (
 
     // Create profile record
     if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').upsert({
-        id: data.user.id,
-        email: email.toLowerCase(),
-        user_type: userType,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_active: true,
-      }, {
-        onConflict: 'id',
-        ignoreDuplicates: false
-      });
+      const normalizedEmail = email.toLowerCase();
+      
+      // First try to get existing profile
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', data.user.id)
+        .single();
 
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        // Attempt to delete the auth user if profile creation fails
-        await supabase.auth.admin.deleteUser(data.user.id);
-        throw new Error('Failed to create user profile');
+      if (!existingProfile) {
+        // Create new profile if it doesn't exist
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: data.user.id,
+          email: normalizedEmail,
+          user_type: userType,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_active: true,
+        });
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+          // Attempt to delete the auth user if profile creation fails
+          await supabase.auth.signOut();
+          throw new Error('Failed to create user profile. Please try again.');
+        }
       }
 
       // Create professional record if needed
@@ -99,39 +108,55 @@ export const signUpWithEmail = async (
 
 export const signInWithEmail = async (email: string, password: string) => {
   try {
+    // Always convert email to lowercase for consistency
+    const normalizedEmail = email.toLowerCase();
+
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: normalizedEmail,
       password,
     });
 
-    if (error) throw error;
+    if (error) {
+      // Check if it's an invalid login error
+      if (error.message.includes('Invalid login credentials')) {
+        // Try to check if email exists to give better error message
+        const { exists, userType } = await checkIfEmailExists(normalizedEmail);
+        if (!exists) {
+          throw new Error('No account found with this email. Please sign up.');
+        }
+        throw new Error('Invalid password. Please try again.');
+      }
+      throw error;
+    }
 
     // Verify the user exists in profiles table
     if (data.user) {
+      // First try to get existing profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('user_type, is_active')
+        .select('user_type')
         .eq('id', data.user.id)
         .single();
 
-      if (profileError || !profile) {
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError;
+      }
+
+      if (!profile) {
         // Profile doesn't exist, create it from user metadata
         const userType = data.user.user_metadata?.user_type || 'homeowner';
         const { error: createProfileError } = await supabase.from('profiles').insert({
           id: data.user.id,
-          email: data.user.email?.toLowerCase(),
+          email: normalizedEmail,
           user_type: userType,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          is_active: true,
         });
 
         if (createProfileError) {
           console.error('Error creating missing profile:', createProfileError);
-          throw new Error('Failed to access user profile');
+          throw new Error('Failed to access user profile. Please try again.');
         }
-      } else if (!profile.is_active) {
-        throw new Error('This account has been deactivated');
       }
 
       // Log the login activity

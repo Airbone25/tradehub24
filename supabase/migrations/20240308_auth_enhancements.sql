@@ -7,6 +7,30 @@ ALTER TABLE professionals
 ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE,
 ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
 
+-- Enable RLS on profiles
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- Profiles policies
+CREATE POLICY "Users can view their own profile"
+ON profiles FOR SELECT
+TO authenticated
+USING (auth.uid() = id);
+
+CREATE POLICY "Users can update their own profile"
+ON profiles FOR UPDATE
+TO authenticated
+USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert their own profile"
+ON profiles FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Public can create profiles during signup"
+ON profiles FOR INSERT
+TO anon
+WITH CHECK (true);
+
 -- Create role change requests table
 CREATE TABLE IF NOT EXISTS role_change_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

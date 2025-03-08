@@ -14,7 +14,23 @@ const HomeownerLogin = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // If user arrived with #access_token / #refresh_token from magic link or social login
+  // 1. Check if user is already logged in (from the FIRST code)
+  useEffect(() => {
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        const userType = session.user.user_metadata?.user_type;
+        if (userType === 'homeowner') {
+          navigate('/homeowner/dashboard');
+        }
+      }
+    };
+    checkSession();
+  }, [navigate]);
+
+  // 2. If user arrived with #access_token / #refresh_token from magic link or social login (from the FIRST code)
   useEffect(() => {
     async function parseHashTokens() {
       if (window.location.hash) {
@@ -30,14 +46,18 @@ const HomeownerLogin = () => {
             console.error('Error setting session from hash (HomeownerLogin):', error.message);
           } else {
             console.log('Session stored from hash (HomeownerLogin):', data);
+            // Navigate to dashboard automatically after successful token set
+            navigate('/homeowner/dashboard');
           }
+          // Remove the hash so it doesn’t persist in the URL
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
     }
     parseHashTokens();
-  }, []);
+  }, [navigate]);
 
+  // 3. Pre-check to confirm the email belongs to a homeowner (from the FIRST code)
   const handlePreCheck = async (checkEmail: string) => {
     try {
       const { exists, userType } = await checkIfEmailExists(checkEmail);
@@ -61,6 +81,7 @@ const HomeownerLogin = () => {
     }
   };
 
+  // 4. Full login with password (from the FIRST code)
   const handleLoginWithPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -82,20 +103,25 @@ const HomeownerLogin = () => {
 
       // Proceed with login
       const { data, error } = await signInWithEmail(email, password);
-      if (error) throw new Error(error);
+      if (error) {
+        toast.error(error);
+        setErrorMessage(error);
+        return;
+      }
 
       // Double check user type after login
       const sessionRes = await supabase.auth.getSession();
       const user = sessionRes.data.session?.user;
       const userMetadataType = user?.user_metadata?.user_type;
-      
+
       if (userMetadataType && userMetadataType !== 'homeowner') {
         await supabase.auth.signOut();
         throw new Error('Access denied: you are not a homeowner.');
       }
 
       toast.success('Login successful!');
-      navigate('/homeowner/dashboard');
+      // Using the FIRST code’s approach (replace or not is up to you)
+      navigate('/homeowner/dashboard', { replace: true });
     } catch (err: any) {
       toast.error(err.message);
       setErrorMessage(err.message);
@@ -104,6 +130,7 @@ const HomeownerLogin = () => {
     }
   };
 
+  // 5. OTP login flow (from the FIRST code)
   const handleLoginWithOTP = async () => {
     setErrorMessage('');
     if (!email) {
@@ -120,6 +147,7 @@ const HomeownerLogin = () => {
     }
   };
 
+  // 6. Google OAuth (from the FIRST code)
   const handleLoginWithGoogle = async () => {
     setErrorMessage('');
     try {
@@ -140,6 +168,7 @@ const HomeownerLogin = () => {
     }
   };
 
+  // 7. Return the DESIGN from the SECOND code
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       {/* Title */}
@@ -149,15 +178,17 @@ const HomeownerLogin = () => {
         </h2>
       </div>
 
-      {/* Form */}
+      {/* Form Container */}
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-md rounded-lg sm:px-10">
+          {/* Error Message */}
           {errorMessage && (
             <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">
               {errorMessage}
             </div>
           )}
 
+          {/* Form */}
           <form className="space-y-6" onSubmit={handleLoginWithPassword}>
             {/* Email */}
             <div>
@@ -217,20 +248,24 @@ const HomeownerLogin = () => {
                 </label>
               </div>
               <div className="text-sm">
-                <Link to="/forgot-password" className="font-medium text-[#105298] hover:text-blue-700">
+                {/* Keep FIRST code's route for 'Forgot your password?' */}
+                <Link
+                  to="/auth/reset-password"
+                  className="font-medium text-[#105298] hover:text-blue-700"
+                >
                   Forgot your password?
                 </Link>
               </div>
             </div>
 
-            {/* Sign In */}
+            {/* Sign In Button */}
             <div>
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm 
-                  text-sm font-medium text-white bg-[#e20000] hover:bg-[#cc0000] 
-                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#105298] 
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm
+                  text-sm font-medium text-white bg-[#e20000] hover:bg-[#cc0000]
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#105298]
                   disabled:opacity-50"
               >
                 {loading ? 'Signing in...' : 'Sign in'}
@@ -250,12 +285,12 @@ const HomeownerLogin = () => {
             </div>
           </div>
 
-          {/* OTP & Google */}
+          {/* OTP & Google Buttons */}
           <div className="mt-6 space-y-2">
             <button
               type="button"
               onClick={handleLoginWithOTP}
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm 
+              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm
                 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
             >
               Login with Email OTP
