@@ -14,7 +14,7 @@ const HomeownerLogin = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Parse #access_token / #refresh_token
+  // If user arrived with #access_token / #refresh_token from magic link or social login
   useEffect(() => {
     async function parseHashTokens() {
       if (window.location.hash) {
@@ -31,7 +31,6 @@ const HomeownerLogin = () => {
           } else {
             console.log('Session stored from hash (HomeownerLogin):', data);
           }
-          // remove hash
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
@@ -49,7 +48,9 @@ const HomeownerLogin = () => {
       }
       if (userType !== 'homeowner') {
         toast.error('Email belongs to a professional account. Use professional login.');
-        setErrorMessage('This email is registered as a professional. Please use the professional login.');
+        setErrorMessage(
+          'This email is registered as a professional. Please use the professional login.'
+        );
         return false;
       }
       return true;
@@ -66,21 +67,33 @@ const HomeownerLogin = () => {
     setLoading(true);
 
     try {
-      const canProceed = await handlePreCheck(email);
-      if (!canProceed) {
-        setLoading(false);
+      // First verify the user type
+      const { exists, userType } = await checkIfEmailExists(email);
+      if (!exists) {
+        toast.error('No account found. Please sign up.');
+        navigate('/homeowner/signup', { state: { email } });
         return;
       }
+      if (userType && userType !== 'homeowner') {
+        toast.error('This email is registered as a professional. Please use the professional login.');
+        navigate('/professional/login');
+        return;
+      }
+
+      // Proceed with login
       const { data, error } = await signInWithEmail(email, password);
       if (error) throw new Error(error);
 
-      // Confirm user type is homeowner
+      // Double check user type after login
       const sessionRes = await supabase.auth.getSession();
       const user = sessionRes.data.session?.user;
-      if (user?.user_metadata?.user_type !== 'homeowner') {
+      const userMetadataType = user?.user_metadata?.user_type;
+      
+      if (userMetadataType && userMetadataType !== 'homeowner') {
         await supabase.auth.signOut();
         throw new Error('Access denied: you are not a homeowner.');
       }
+
       toast.success('Login successful!');
       navigate('/homeowner/dashboard');
     } catch (err: any) {
@@ -100,8 +113,6 @@ const HomeownerLogin = () => {
     try {
       const canProceed = await handlePreCheck(email);
       if (!canProceed) return;
-
-      // Just navigate to the OTP page
       navigate('/homeowner/login-otp', { state: { email } });
     } catch (err: any) {
       toast.error(err.message);
@@ -131,7 +142,7 @@ const HomeownerLogin = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      {/* Header */}
+      {/* Title */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="text-center text-3xl font-bold text-gray-900">
           Welcome back, Homeowner
@@ -164,8 +175,8 @@ const HomeownerLogin = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm
-                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm
+                    focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
@@ -186,8 +197,8 @@ const HomeownerLogin = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm
-                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm
+                    focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
@@ -212,7 +223,7 @@ const HomeownerLogin = () => {
               </div>
             </div>
 
-            {/* Sign In Button */}
+            {/* Sign In */}
             <div>
               <button
                 type="submit"
@@ -239,7 +250,7 @@ const HomeownerLogin = () => {
             </div>
           </div>
 
-          {/* Additional Buttons */}
+          {/* OTP & Google */}
           <div className="mt-6 space-y-2">
             <button
               type="button"

@@ -1,5 +1,4 @@
 // src/pages/professional/ProfessionalLogin.tsx
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
@@ -11,7 +10,7 @@ const ProfessionalLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Parse #access_token / #refresh_token
+  // Parse tokens from hash if returned from magic link or Google
   useEffect(() => {
     async function parseHashTokens() {
       if (window.location.hash) {
@@ -24,10 +23,7 @@ const ProfessionalLogin = () => {
             refresh_token: refreshToken,
           });
           if (error) {
-            console.error(
-              'Error setting session from hash (ProfessionalLogin):',
-              error.message
-            );
+            console.error('Error setting session from hash (ProfessionalLogin):', error.message);
           } else {
             console.log('Session stored from hash (ProfessionalLogin):', data);
           }
@@ -41,19 +37,19 @@ const ProfessionalLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { data, error } = await signInWithEmail(email, password);
-
     if (error) {
-      alert(error.message);
+      alert(error);
+      return;
+    }
+
+    // Confirm user_type
+    const sessionRes = await supabase.auth.getSession();
+    const user = sessionRes.data?.session?.user;
+    if (user?.user_metadata?.user_type !== 'professional') {
+      await supabase.auth.signOut();
+      alert('Access denied: you are not a professional user.');
     } else {
-      // Confirm user_type
-      const sessionRes = await supabase.auth.getSession();
-      const user = sessionRes.data?.session?.user;
-      if (user?.user_metadata?.user_type !== 'professional') {
-        await supabase.auth.signOut();
-        alert('Access denied: you are not a professional user.');
-      } else {
-        navigate('/professional/dashboard');
-      }
+      navigate('/professional/dashboard');
     }
   };
 
@@ -68,14 +64,12 @@ const ProfessionalLogin = () => {
         redirectTo: 'https://www.tradehub24.com/professional/login',
       },
     });
-    if (error) {
-      alert(error.message);
-    }
+    if (error) alert(error.message);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      {/* Header */}
+      {/* Title */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="text-center text-3xl font-bold text-gray-900">
           Sign in to your professional account
@@ -111,18 +105,15 @@ const ProfessionalLogin = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                    focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
               <div className="mt-1 relative">
@@ -136,8 +127,8 @@ const ProfessionalLogin = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                    focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
@@ -165,7 +156,7 @@ const ProfessionalLogin = () => {
               </div>
             </div>
 
-            {/* Sign In Button */}
+            {/* Sign In */}
             <div>
               <button
                 type="submit"
@@ -178,7 +169,7 @@ const ProfessionalLogin = () => {
             </div>
           </form>
 
-          {/* Additional Buttons (Email OTP, Google) */}
+          {/* Additional Buttons */}
           <div className="mt-6 space-y-2">
             {/* Email OTP */}
             <button
@@ -190,31 +181,13 @@ const ProfessionalLogin = () => {
               Login with Email OTP
             </button>
 
-            {/* Google button */}
+            {/* Google */}
             <button
               type="button"
               onClick={handleLoginWithGoogle}
-              className="
-                w-full
-                flex
-                items-center
-                justify-center
-                border
-                border-gray-300
-                rounded-md
-                shadow-sm
-                px-6
-                py-2
-                text-sm
-                font-medium
-                text-gray-700
-                bg-white
-                hover:bg-gray-50
-                focus:outline-none
-                focus:ring-2
-                focus:ring-offset-2
-                focus:ring-gray-500
-              "
+              className="w-full flex items-center justify-center border border-gray-300 rounded-md shadow-sm
+                px-6 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
               <img
                 src="/src/assets/googlepng.png"

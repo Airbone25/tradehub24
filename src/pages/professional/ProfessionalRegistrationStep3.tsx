@@ -1,5 +1,5 @@
 // src/pages/professional/ProfessionalRegistrationStep3.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
 import { toast } from 'react-toastify';
@@ -13,6 +13,24 @@ const ProfessionalRegistrationStep3 = () => {
     companySummary: '',
     servicesOffered: '',
   });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from('professionals')
+        .select('company_summary, services_offered')
+        .eq('user_id', user.id)
+        .single();
+      if (!error && data) {
+        setFormData({
+          companySummary: data.company_summary || '',
+          servicesOffered: data.services_offered || '',
+        });
+      }
+    };
+    fetchData();
+  }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -32,6 +50,7 @@ const ProfessionalRegistrationStep3 = () => {
         .update({
           company_summary: formData.companySummary,
           services_offered: formData.servicesOffered,
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id)
         .select()

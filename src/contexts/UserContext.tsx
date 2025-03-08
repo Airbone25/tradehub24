@@ -1,8 +1,11 @@
 // src/contexts/UserContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../services/supabaseClient';
-import { UserProfile, UserType } from '../services/authService';
+import {
+  UserProfile,
+  UserType,
+} from '../services/authService';
 import { useNavigate } from 'react-router-dom';
 
 interface AuthUser extends SupabaseUser {
@@ -18,7 +21,10 @@ interface UserContextProps {
   isAuthenticated: boolean;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   logout: () => Promise<void>;
-  loginWithOTP: (email: string, userType: UserType) => Promise<{ success: boolean; message: string }>;
+  loginWithOTP: (
+    email: string,
+    userType: UserType
+  ) => Promise<{ success: boolean; message: string }>;
 }
 
 const UserContext = createContext<UserContextProps | undefined>(undefined);
@@ -56,7 +62,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const determineUserType = (supabaseUser: SupabaseUser | null, userProfile: UserProfile | null): UserType | null => {
+  const determineUserType = (
+    supabaseUser: SupabaseUser | null,
+    userProfile: UserProfile | null
+  ): UserType | null => {
     if (userProfile?.user_type) return userProfile.user_type;
     if (supabaseUser?.user_metadata?.user_type) {
       return supabaseUser.user_metadata.user_type as UserType;
@@ -68,11 +77,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       setLoading(true);
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
 
         if (session?.user) {
-          setUser(session.user);
+          setUser(session.user as AuthUser);
           const fetchedProfile = await fetchProfile(session.user.id);
           setUserType(determineUserType(session.user, fetchedProfile));
         }
@@ -86,18 +98,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        setUser(session.user);
-        const fetchedProfile = await fetchProfile(session.user.id);
-        setUserType(determineUserType(session.user, fetchedProfile));
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setProfile(null);
-        setUserType(null);
-        navigate('/');
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          setUser(session.user as AuthUser);
+          const fetchedProfile = await fetchProfile(session.user.id);
+          setUserType(determineUserType(session.user, fetchedProfile));
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setProfile(null);
+          setUserType(null);
+          navigate('/');
+        }
       }
-    });
+    );
 
     return () => {
       authListener.subscription.unsubscribe();

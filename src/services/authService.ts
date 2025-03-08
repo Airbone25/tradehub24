@@ -1,202 +1,190 @@
 // src/services/authService.ts
 import { supabase } from './supabaseClient';
+import { checkIfEmailExists } from './emailService';
 
 export type UserType = 'homeowner' | 'professional' | 'admin';
 
-export interface UserProfile {
-  id: string;
-  user_type: UserType;
-  first_name?: string;
-  last_name?: string;
-  email?: string;
-  phone?: string;
-  postcode?: string;
-  company_name?: string;
-  business_registration_number?: string;
-  trade?: string;
-  created_at?: string;
-  updated_at?: string;
+interface SignUpOptions {
+  emailRedirectTo?: string;
+  data?: Record<string, any>;
 }
 
-// --- SIGN UP WITH EMAIL & PASSWORD ---
-export async function signUpWithEmail(
+export const signUpWithEmail = async (
   email: string,
   password: string,
-  userTypeOrOptions: UserType | { 
-    emailRedirectTo?: string;
-    data?: Record<string, any>;
-  },
-  profileData?: Partial<UserProfile>
-) {
+  userTypeOrOptions: UserType | SignUpOptions
+) => {
   try {
     let userType: UserType;
-    let options: any = {};
+    let options: SignUpOptions = {};
 
     if (typeof userTypeOrOptions === 'string') {
-      // e.g. signUpWithEmail(email, password, 'homeowner')
-      userType = userTypeOrOptions as UserType;
-      options = {
-        emailRedirectTo: `${window.location.origin}/${userType}/login`,
-        data: { user_type: userType },
-      };
+      userType = userTypeOrOptions;
+      options = {};
     } else {
-      // e.g. signUpWithEmail(email, password, { data: {...} })
       options = userTypeOrOptions;
       userType = options.data?.user_type || 'homeowner';
     }
 
+    // Check if email already exists
+    const { exists, userType: existingUserType } = await checkIfEmailExists(email);
+    if (exists) {
+      if (existingUserType) {
+        return { 
+          data: null, 
+          error: `This email is already used by a ${existingUserType} account. Please use a different email.` 
+        };
+      }
+      return { data: null, error: 'Email already registered. Please log in.' };
+    }
+
+    // Create user in Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: options.emailRedirectTo || `${window.location.origin}/${userType}/login`,
-        data: { user_type: userType, ...options.data },
+        data: {
+          user_type: userType,
+          ...options.data,
+        },
       },
     });
+
     if (error) throw error;
 
-    // Optionally create a row in "profiles" table
+    // Create profile record
     if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          email,
-          user_type: userType,
-          ...profileData,
-          ...(options.data || {}),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        id: data.user.id,
+        email: email.toLowerCase(),
+        user_type: userType,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_active: true,
+      }, {
+        onConflict: 'id',
+        ignoreDuplicates: false
+      });
 
       if (profileError) {
-        console.error('Error creating user profile:', profileError);
-        return { data, error: profileError.message };
+        console.error('Error creating profile:', profileError);
+        // Attempt to delete the auth user if profile creation fails
+        await supabase.auth.admin.deleteUser(data.user.id);
+        throw new Error('Failed to create user profile');
+      }
+
+      // Create professional record if needed
+      if (userType === 'professional') {
+        const { error: professionalError } = await supabase.from('professionals').insert({
+          user_id: data.user.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_active: true,
+        });
+
+        if (professionalError) {
+          console.error('Error creating professional record:', professionalError);
+          // Don't throw here as the user and profile are already created
+        }
       }
     }
 
     return { data, error: null };
-  } catch (err: any) {
-    console.error('Sign up error:', err);
-    return { data: null, error: err.message };
+  } catch (error: any) {
+    console.error('Error in signUpWithEmail:', error);
+    return { data: null, error: error.message };
   }
-}
+};
 
-// --- SIGN IN WITH PASSWORD ---
-export async function signInWithPassword(email: string, password: string) {
+export const signInWithEmail = async (email: string, password: string) => {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    if (error) return { data: null, error: error.message };
 
-    // Optionally confirm user_type from "profiles"
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', data.user.id)
-      .single();
-    if (profileError) {
-      return { data: null, error: 'Error fetching user profile' };
+    if (error) throw error;
+
+    // Verify the user exists in profiles table
+    if (data.user) {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_type, is_active')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError || !profile) {
+        // Profile doesn't exist, create it from user metadata
+        const userType = data.user.user_metadata?.user_type || 'homeowner';
+        const { error: createProfileError } = await supabase.from('profiles').insert({
+          id: data.user.id,
+          email: data.user.email?.toLowerCase(),
+          user_type: userType,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_active: true,
+        });
+
+        if (createProfileError) {
+          console.error('Error creating missing profile:', createProfileError);
+          throw new Error('Failed to access user profile');
+        }
+      } else if (!profile.is_active) {
+        throw new Error('This account has been deactivated');
+      }
+
+      // Log the login activity
+      const { error: activityError } = await supabase.from('login_activity').insert({
+        user_id: data.user.id,
+        login_time: new Date().toISOString(),
+        ip_address: 'client-side',
+        user_agent: navigator.userAgent,
+      });
+
+      if (activityError) {
+        console.error('Error logging activity:', activityError);
+      }
     }
 
-    return { data: { ...data, profile }, error: null };
-  } catch (err: any) {
-    console.error('Sign in error:', err);
-    return { data: null, error: err.message };
-  }
-}
-
-// For backward compatibility
-export const signInWithEmail = signInWithPassword;
-
-// --- SIGN IN WITH OTP (MAGIC LINK) ---
-export async function signInWithOtp(email: string, userType: UserType) {
-  try {
-    const { data, error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/${userType}/login-otp-callback`,
-        data: { user_type: userType },
-      },
-    });
-    if (error) return { data: null, error: error.message };
     return { data, error: null };
-  } catch (err: any) {
-    console.error('OTP sign in error:', err);
-    return { data: null, error: err.message };
+  } catch (error: any) {
+    console.error('Error in signInWithEmail:', error);
+    return { data: null, error: error.message };
   }
-}
+};
 
-// --- VERIFY OTP CALLBACK (OPTIONAL) ---
-export async function verifyOtpCallback() {
-  try {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) return { data: null, error: error.message };
-
-    if (data.session) {
-      return { data: data.session, error: null };
-    }
-    return { data: null, error: 'No session found' };
-  } catch (err: any) {
-    console.error('OTP verification error:', err);
-    return { data: null, error: err.message };
-  }
-}
-
-// --- GET CURRENT USER + PROFILE ---
-export async function getCurrentUser() {
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) return { data: null, error: error.message };
-    if (!user) return { data: null, error: 'No user found' };
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    if (profileError) return { data: null, error: profileError.message };
-
-    return { data: { user, profile }, error: null };
-  } catch (err: any) {
-    console.error('Get user error:', err);
-    return { data: null, error: err.message };
-  }
-}
-
-// --- UPDATE USER PROFILE ---
-export async function updateUserProfile(profileData: Partial<UserProfile>) {
-  try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return { data: null, error: 'User not authenticated' };
-    }
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({
-        ...profileData,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', user.id)
-      .select();
-    if (error) return { data: null, error: error.message };
-    return { data: data[0], error: null };
-  } catch (err: any) {
-    console.error('Update profile error:', err);
-    return { data: null, error: err.message };
-  }
-}
-
-// --- SIGN OUT ---
-export async function signOut() {
+export const signOut = async () => {
   try {
     const { error } = await supabase.auth.signOut();
-    if (error) return { success: false, error: error.message };
-    return { success: true };
-  } catch (err: any) {
-    console.error('Sign out error:', err);
-    return { success: false, error: err.message };
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error: any) {
+    console.error('Error in signOut:', error);
+    return { success: false, error: error.message };
   }
-}
+};
+
+export const signOutAllSessions = async () => {
+  try {
+    const { error } = await supabase.auth.signOut({ scope: 'global' });
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error: any) {
+    console.error('Error in signOutAllSessions:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const resetPassword = async (email: string) => {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error: any) {
+    console.error('Error in resetPassword:', error);
+    return { success: false, error: error.message };
+  }
+};

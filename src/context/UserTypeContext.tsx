@@ -8,7 +8,9 @@ interface UserTypeContextProps {
   setUserType: React.Dispatch<React.SetStateAction<UserType>>;
 }
 
-export const UserTypeContext = createContext<UserTypeContextProps | undefined>(undefined);
+export const UserTypeContext = createContext<UserTypeContextProps | undefined>(
+  undefined
+);
 
 interface UserTypeProviderProps {
   children: ReactNode;

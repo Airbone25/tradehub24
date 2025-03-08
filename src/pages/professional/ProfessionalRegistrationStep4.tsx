@@ -1,5 +1,5 @@
 // src/pages/professional/ProfessionalRegistrationStep4.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
 import { toast } from 'react-toastify';
@@ -12,7 +12,10 @@ const ProfessionalRegistrationStep4 = () => {
   const [proofOfID, setProofOfID] = useState<File | null>(null);
   const [liabilityInsurance, setLiabilityInsurance] = useState<File | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setFile: (f: File | null) => void) => {
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setFile: (file: File | null) => void
+  ) => {
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
     }
@@ -27,25 +30,23 @@ const ProfessionalRegistrationStep4 = () => {
 
     try {
       // 1. Upload files to Supabase Storage if provided
-      let proofOfIDUrl = null;
-      let liabilityUrl = null;
+      let proofOfIDUrl: string | null = null;
+      let liabilityUrl: string | null = null;
 
       if (proofOfID) {
-        const { data, error } = await supabase
-          .storage
+        const { data, error } = await supabase.storage
           .from('professional-documents')
           .upload(`proofID/${user.id}-${proofOfID.name}`, proofOfID);
         if (error) throw error;
-        proofOfIDUrl = data?.path;
+        proofOfIDUrl = data?.path || null;
       }
 
       if (liabilityInsurance) {
-        const { data, error } = await supabase
-          .storage
+        const { data, error } = await supabase.storage
           .from('professional-documents')
           .upload(`liability/${user.id}-${liabilityInsurance.name}`, liabilityInsurance);
         if (error) throw error;
-        liabilityUrl = data?.path;
+        liabilityUrl = data?.path || null;
       }
 
       // 2. Save the file paths in the "professionals" table
@@ -54,6 +55,7 @@ const ProfessionalRegistrationStep4 = () => {
         .update({
           proof_of_id: proofOfIDUrl,
           liability_insurance: liabilityUrl,
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id)
         .select()
@@ -69,7 +71,7 @@ const ProfessionalRegistrationStep4 = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md mb-8 text-center">
         <h2 className="text-3xl font-bold text-gray-900">Upload Documents</h2>
         <p className="mt-2 text-sm text-gray-600">

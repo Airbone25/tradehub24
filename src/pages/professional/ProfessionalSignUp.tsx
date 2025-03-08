@@ -1,11 +1,11 @@
-// src/pages/professional/ProfessionalSignup.tsx
+// src/pages/professional/ProfessionalSignUp.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { signUpWithEmail } from '../../services/authService';
 import { Mail, Lock, User, MapPin, Phone, Briefcase } from 'lucide-react';
 
-const ProfessionalSignup = () => {
+const ProfessionalSignUp = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -21,24 +21,18 @@ const ProfessionalSignup = () => {
     businessRegistration: '',
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Standard email+password sign-up
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validate password
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
 
-    // Attempt signup as "professional"
     const { data, error } = await signUpWithEmail(formData.email, formData.password, {
       emailRedirectTo: 'https://www.tradehub24.com/professional/login',
       data: {
@@ -67,8 +61,7 @@ const ProfessionalSignup = () => {
       }
     } else {
       toast.success('Professional account created! Check your email to verify.');
-      // Optionally navigate to login
-      // navigate('/professional/login');
+      // navigate('/auth/please-confirm-email', { state: { email: formData.email } });
     }
   };
 
@@ -96,11 +89,9 @@ const ProfessionalSignup = () => {
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* First & Last Name */}
             <div className="grid grid-cols-2 gap-4">
+              {/* firstName */}
               <div>
-                <label
-                  htmlFor="firstName"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
                   First Name
                 </label>
                 <div className="mt-1 relative">
@@ -114,17 +105,15 @@ const ProfessionalSignup = () => {
                     required
                     value={formData.firstName}
                     onChange={handleChange}
-                    className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                      placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                      focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                   />
                 </div>
               </div>
 
+              {/* lastName */}
               <div>
-                <label
-                  htmlFor="lastName"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
                   Last Name
                 </label>
                 <div className="mt-1 relative">
@@ -138,8 +127,8 @@ const ProfessionalSignup = () => {
                     required
                     value={formData.lastName}
                     onChange={handleChange}
-                    className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                      placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                      focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                   />
                 </div>
               </div>
@@ -147,10 +136,7 @@ const ProfessionalSignup = () => {
 
             {/* Company Name */}
             <div>
-              <label
-                htmlFor="companyName"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
                 Company Name
               </label>
               <div className="mt-1 relative">
@@ -164,18 +150,15 @@ const ProfessionalSignup = () => {
                   required
                   value={formData.companyName}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                    focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
 
             {/* Trade */}
             <div>
-              <label
-                htmlFor="trade"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="trade" className="block text-sm font-medium text-gray-700">
                 Trade
               </label>
               <div className="mt-1">
@@ -185,8 +168,8 @@ const ProfessionalSignup = () => {
                   required
                   value={formData.trade}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                    focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 >
                   <option value="">Select a trade</option>
                   <option value="plumber">Plumber</option>
@@ -202,10 +185,7 @@ const ProfessionalSignup = () => {
 
             {/* Email */}
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
               </label>
               <div className="mt-1 relative">
@@ -220,18 +200,15 @@ const ProfessionalSignup = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                    focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
               <div className="mt-1 relative">
@@ -246,18 +223,15 @@ const ProfessionalSignup = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                    focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Confirm Password
               </label>
               <div className="mt-1 relative">
@@ -272,18 +246,15 @@ const ProfessionalSignup = () => {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                    focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
 
             {/* Postcode */}
             <div>
-              <label
-                htmlFor="postcode"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="postcode" className="block text-sm font-medium text-gray-700">
                 Postcode
               </label>
               <div className="mt-1 relative">
@@ -297,18 +268,15 @@ const ProfessionalSignup = () => {
                   required
                   value={formData.postcode}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                    focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
 
             {/* Phone */}
             <div>
-              <label
-                htmlFor="phone"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
                 Phone Number
               </label>
               <div className="mt-1 relative">
@@ -322,18 +290,15 @@ const ProfessionalSignup = () => {
                   required
                   value={formData.phone}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                    focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
 
-            {/* Business Registration */}
+            {/* Business Registration (Optional) */}
             <div>
-              <label
-                htmlFor="businessRegistration"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="businessRegistration" className="block text-sm font-medium text-gray-700">
                 Business Registration Number (Optional)
               </label>
               <div className="mt-1 relative">
@@ -346,19 +311,20 @@ const ProfessionalSignup = () => {
                   type="text"
                   value={formData.businessRegistration}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
-                    placeholder-gray-400 focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                    focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm 
-                  text-sm font-medium text-white bg-[#e20000] hover:bg-[#cc0000] 
-                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#105298]"
+                className="w-full flex justify-center py-2 px-4 border border-transparent 
+                  rounded-md shadow-sm text-sm font-medium text-white bg-[#e20000] 
+                  hover:bg-[#cc0000] focus:outline-none focus:ring-2 focus:ring-offset-2 
+                  focus:ring-[#105298]"
               >
                 Create Professional Account
               </button>
@@ -370,4 +336,4 @@ const ProfessionalSignup = () => {
   );
 };
 
-export default ProfessionalSignup;
+export default ProfessionalSignUp;

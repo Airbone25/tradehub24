@@ -1,9 +1,10 @@
 // src/App.tsx
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+import { useIdleTimer } from './hooks/useIdleTimer'; // <-- NEW import
 
 // Layout & Components
 import { Layout } from './components/Layout';
@@ -92,6 +93,10 @@ import ProfessionalRegistrationStep3 from './pages/professional/ProfessionalRegi
 import ProfessionalRegistrationStep4 from './pages/professional/ProfessionalRegistrationStep4';
 
 function App() {
+  // Auto-logout after 30 minutes of inactivity (example).
+  // Adjust to your preference, e.g. 15 * 60_000 for 15 minutes.
+  useIdleTimer(30 * 60_000);
+
   return (
     <Router>
       <UserProvider>

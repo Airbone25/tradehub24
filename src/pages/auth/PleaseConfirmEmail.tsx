@@ -1,5 +1,4 @@
 // src/pages/auth/PleaseConfirmEmail.tsx
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -9,18 +8,17 @@ const PleaseConfirmEmail: React.FC = () => {
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
 
-  // We assume we passed { state: { email: 'some@user.com' } } when navigating here
   const email = (location.state as { email?: string })?.email || '';
 
   useEffect(() => {
     if (!email) {
-      // If no email in state, just redirect to homeowner signup or professional signup
+      // If no email in state, redirect
       navigate('/homeowner/signup');
       return;
     }
 
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
           toast.error('Time is up! Please sign up again.');

@@ -8,8 +8,7 @@ const UpdatePassword: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // If user just arrived with #access_token, supabase sets the session automatically.
-    // We can show a simple form to set a new password.
+    // If user arrived with #access_token, supabase sets session automatically.
   }, []);
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -44,7 +43,8 @@ const UpdatePassword: React.FC = () => {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                  focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
             <div>

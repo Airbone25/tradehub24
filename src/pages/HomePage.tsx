@@ -1,8 +1,8 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Shield, Clock, Star, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import man1Image from '../assets/man-1.png';
-import { UserTypeContext } from '../context/UserTypeContext';
+import { useUser } from '../contexts/UserContext';
 import { ProfessionalHome } from './professional/ProfessionalHome';
 
 const homeownerTestimonials = [
@@ -54,8 +54,9 @@ const benefits = [
 ];
 
 export function HomePage() {
-  const { userType } = useContext(UserTypeContext)!;
-  const isProfessional = userType === 'professional';
+  const { user } = useUser();
+  const currentUserType = user?.type || 'homeowner';
+  const isProfessional = currentUserType === 'professional';
 
   if (isProfessional) {
     return <ProfessionalHome />;

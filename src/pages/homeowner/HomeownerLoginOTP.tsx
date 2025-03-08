@@ -24,8 +24,6 @@ const HomeownerLoginOTP: React.FC = () => {
     // Handle OTP callback
     if (isCallback) {
       setLoading(true);
-      // Because Supabase v2 automatically sets session upon returning with #access_token,
-      // we can show a "Verifying" spinner or message.
       (async () => {
         try {
           const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -64,7 +62,9 @@ const HomeownerLoginOTP: React.FC = () => {
     try {
       const { exists, userType } = await checkIfEmailExists(email);
       if (!exists) {
-        navigate('/homeowner/signup', { state: { email, message: 'Account not found. Please sign up.' } });
+        navigate('/homeowner/signup', {
+          state: { email, message: 'Account not found. Please sign up.' },
+        });
         return;
       }
       if (userType !== 'homeowner') {
@@ -156,7 +156,8 @@ const HomeownerLoginOTP: React.FC = () => {
                   type="email"
                   autoComplete="email"
                   required
-                  className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md 
+                    focus:ring-blue-500 focus:border-blue-500"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -168,7 +169,9 @@ const HomeownerLoginOTP: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md 
+                  shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
                 {loading ? 'Sending...' : 'Send Magic Link'}
               </button>
@@ -188,14 +191,15 @@ const HomeownerLoginOTP: React.FC = () => {
             <div className="mt-6 grid grid-cols-2 gap-3">
               <Link
                 to="/homeowner/login"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 
+                  rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 Password Login
               </Link>
-
               <Link
                 to="/homeowner/signup"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 
+                  rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 Sign Up
               </Link>

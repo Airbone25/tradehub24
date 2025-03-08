@@ -1,12 +1,16 @@
 // src/pages/auth/ResetPassword.tsx
 import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { supabase } from '../../services/supabaseClient';
 import { Mail } from 'lucide-react';
+import { checkIfEmailExists } from '../../services/emailService';
 
 const ResetPassword: React.FC = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { userType } = useParams<{ userType: 'homeowner' | 'professional' }>();
 
   const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,14 +20,35 @@ const ResetPassword: React.FC = () => {
     }
     setLoading(true);
     try {
+      // Check if email exists and get user type
+      const { exists, userType: existingUserType } = await checkIfEmailExists(email);
+      
+      if (!exists) {
+        // For security, show the same message even if email doesn't exist
+        toast.success('If an account exists with this email, a password reset link has been sent.');
+        return;
+      }
+
+      // If userType is specified and doesn't match, redirect
+      if (userType && existingUserType && userType !== existingUserType) {
+        toast.info(`Redirecting to ${existingUserType} password reset...`);
+        navigate(`/${existingUserType}/reset-password`);
+        return;
+      }
+
       // Supabase: request a password reset link
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/${existingUserType || userType || 'auth'}/update-password`,
       });
+      
       if (error) throw error;
-      toast.success('Password reset link sent! Check your email.');
+      
+      // For security, show the same success message
+      toast.success('If an account exists with this email, a password reset link has been sent.');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to send reset link');
+      // For security, show success even on error
+      toast.success('If an account exists with this email, a password reset link has been sent.');
+      console.error('Password reset error:', err);
     } finally {
       setLoading(false);
     }
@@ -35,6 +60,7 @@ const ResetPassword: React.FC = () => {
         <h2 className="text-center text-3xl font-bold text-gray-900">Reset Password</h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Enter your email to receive a password reset link.
+          {userType && ` (${userType} account)`}
         </p>
       </div>
 
@@ -56,7 +82,7 @@ const ResetPassword: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md 
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md 
                     shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>

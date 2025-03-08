@@ -1,5 +1,5 @@
 // src/pages/professional/ProfessionalRegistrationStep2.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
 import { toast } from 'react-toastify';
@@ -17,6 +17,28 @@ const ProfessionalRegistrationStep2 = () => {
     postcode: '',
   });
 
+  // Optional: fetch existing data if user already has a row in "professionals"
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from('professionals')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      if (!error && data) {
+        setFormData({
+          companyName: data.company_name || '',
+          registrationNumber: data.business_registration_number || '',
+          address: data.address || '',
+          city: data.city || '',
+          postcode: data.postcode || '',
+        });
+      }
+    };
+    fetchData();
+  }, [user]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -30,19 +52,19 @@ const ProfessionalRegistrationStep2 = () => {
     }
 
     try {
-      // Insert or update "professionals" table with step2 data
+      // Upsert data into the "professionals" table
       const { data, error } = await supabase
         .from('professionals')
-        .update({
+        .upsert({
+          user_id: user.id,
           company_name: formData.companyName,
           business_registration_number: formData.registrationNumber,
           address: formData.address,
           city: formData.city,
           postcode: formData.postcode,
+          updated_at: new Date().toISOString(),
         })
-        .eq('user_id', user.id)
-        .select()
-        .single();
+        .single(); // 'upsert' + .single() merges or inserts
 
       if (error) throw error;
       toast.success('Step 2 saved!');
