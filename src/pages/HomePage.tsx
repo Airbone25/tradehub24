@@ -3,6 +3,7 @@ import { Shield, Clock, Star, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import man1Image from '../assets/man-1.png';
 import { useUser } from '../contexts/UserContext';
+import { UserTypeContext, UserType } from '../context/UserTypeContext';
 import { ProfessionalHome } from './professional/ProfessionalHome';
 
 const homeownerTestimonials = [
@@ -54,11 +55,9 @@ const benefits = [
 ];
 
 export function HomePage() {
-  const { user } = useUser();
-  const currentUserType = user?.type || 'homeowner';
-  const isProfessional = currentUserType === 'professional';
+  const { userType } = React.useContext(UserTypeContext)!;
 
-  if (isProfessional) {
+  if (userType === 'professional') {
     return <ProfessionalHome />;
   }
 
