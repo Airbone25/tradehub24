@@ -1,6 +1,6 @@
-// src/services/authService.ts
 import { supabase } from './supabaseClient';
 import { checkIfEmailExists } from './emailService';
+import { sendConfirmationEmail, sendWelcomeEmail } from './emailService';
 
 export type UserType = 'homeowner' | 'professional' | 'admin';
 
@@ -38,12 +38,13 @@ export const signUpWithEmail = async (
       return { data: null, error: 'Email already registered. Please log in.' };
     }
 
-    // Create user in Supabase Auth
+    // Create user in Supabase Auth with a redirect URL set to our callback route.
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: options.emailRedirectTo || `${window.location.origin}/${userType}/login`,
+        // Here we set emailRedirectTo to our dedicated email-confirmed callback route.
+        emailRedirectTo: options.emailRedirectTo || `${window.location.origin}/auth/email-confirmed`,
         data: {
           user_type: userType,
           ...options.data,
@@ -53,50 +54,11 @@ export const signUpWithEmail = async (
 
     if (error) throw error;
 
-    // Create profile record
-    if (data.user) {
+    // For homeowners, send the branded emails.
+    if (userType === 'homeowner') {
       const normalizedEmail = email.toLowerCase();
-      
-      // First try to get existing profile
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', data.user.id)
-        .single();
-
-      if (!existingProfile) {
-        // Create new profile if it doesn't exist
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: data.user.id,
-          email: normalizedEmail,
-          user_type: userType,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          is_active: true,
-        });
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-          // Attempt to delete the auth user if profile creation fails
-          await supabase.auth.signOut();
-          throw new Error('Failed to create user profile. Please try again.');
-        }
-      }
-
-      // Create professional record if needed
-      if (userType === 'professional') {
-        const { error: professionalError } = await supabase.from('professionals').insert({
-          user_id: data.user.id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          is_active: true,
-        });
-
-        if (professionalError) {
-          console.error('Error creating professional record:', professionalError);
-          // Don't throw here as the user and profile are already created
-        }
-      }
+      await sendConfirmationEmail(normalizedEmail, userType);
+      await sendWelcomeEmail(normalizedEmail, userType);
     }
 
     return { data, error: null };

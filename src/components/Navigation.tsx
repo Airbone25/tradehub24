@@ -5,33 +5,30 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import logoImage from '../assets/logo-image.png';
 import logoName from '../assets/logo-name.png';
-import { UserTypeContext, UserType } from '../context/UserTypeContext';
 import { useUser } from '../contexts/UserContext';
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
-  const { userType, setUserType } = useContext(UserTypeContext)!;
+  const { userType, setUserType, isAuthenticated, user, signOut } = useUser();
   const navigate = useNavigate();
-
-  const { isAuthenticated, user, logout } = useUser();
 
   const currentUserType = userType || 'homeowner';
 
-  const handleUserTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedType = e.target.value as UserType;
-    setUserType(selectedType);
+  const handleUserTypeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedType = e.target.value as 'homeowner' | 'professional';
+    await setUserType(selectedType);
     navigate('/');
     setIsOpen(false);
   };
 
   const handleLogout = async () => {
     try {
-      await logout();
-      toast.success('Logged out successfully');
-      setIsOpen(false);
+      await signOut();
       navigate('/');
+      toast.success('Successfully logged out');
     } catch (error) {
-      toast.error('Failed to log out. Please try again.');
+      console.error('Error logging out:', error);
+      toast.error('Failed to log out');
     }
   };
 

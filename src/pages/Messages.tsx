@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
-import { UserTypeContext } from '../context/UserTypeContext';
+import { useUser } from '../contexts/UserContext';
 import MessagingInterface from '../components/shared/MessagingInterface'; // If you need this UI
 
 const Messages: React.FC = () => {
@@ -10,7 +10,7 @@ const Messages: React.FC = () => {
   const location = useLocation();
 
   // Instead of calling `UserType()` as a function, useContext:
-  const { userType /*, setUserType */ } = useContext(UserTypeContext)!;
+  const { userType } = useUser();
 
   // Local states for loading/error
   const [isLoading, setIsLoading] = useState<boolean>(true);

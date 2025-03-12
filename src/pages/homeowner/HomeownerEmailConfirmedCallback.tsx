@@ -1,5 +1,3 @@
-// src/pages/homeowner/HomeownerEmailConfirmedCallback.tsx
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
@@ -23,21 +21,14 @@ const HomeownerEmailConfirmedCallback: React.FC = () => {
           });
           if (error) throw error;
 
-          // Double-check the user type
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user?.user_metadata?.user_type === 'homeowner') {
-            // Go to homeowner dashboard
-            navigate('/homeowner/dashboard');
-          } else {
-            // If user_type not homeowner, fallback
-            navigate('/');
-          }
+          // After successful session setup, redirect to the login page
+          navigate('/homeowner/login');
         } else {
-          // No tokens found => fallback
+          // No tokens found, fallback to login
           navigate('/homeowner/login');
         }
       } catch (err: any) {
-        console.error('Error in homeowner email-confirmed-callback:', err);
+        console.error('Error in email confirmation callback:', err);
         navigate('/homeowner/login');
       }
     }

@@ -1,7 +1,5 @@
-// src/services/profileService.ts
-
 import { supabase } from './supabaseClient';
-import { UserProfile, UserType } from './authService';
+import { UserProfile, UserType } from '../contexts/UserContext';
 
 export async function createProfile(profileData: Partial<UserProfile>) {
   // Make sure there's a valid session

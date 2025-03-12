@@ -1,4 +1,3 @@
-// src/pages/homeowner/HomeownerLogin.tsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
@@ -14,7 +13,7 @@ const HomeownerLogin = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // 1. Check if user is already logged in (from the FIRST code)
+  // 1. Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
       const {
@@ -30,7 +29,7 @@ const HomeownerLogin = () => {
     checkSession();
   }, [navigate]);
 
-  // 2. If user arrived with #access_token / #refresh_token from magic link or social login (from the FIRST code)
+  // 2. Handle tokens from magic link or social login
   useEffect(() => {
     async function parseHashTokens() {
       if (window.location.hash) {
@@ -46,10 +45,8 @@ const HomeownerLogin = () => {
             console.error('Error setting session from hash (HomeownerLogin):', error.message);
           } else {
             console.log('Session stored from hash (HomeownerLogin):', data);
-            // Navigate to dashboard automatically after successful token set
             navigate('/homeowner/dashboard');
           }
-          // Remove the hash so it doesn’t persist in the URL
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
@@ -57,7 +54,7 @@ const HomeownerLogin = () => {
     parseHashTokens();
   }, [navigate]);
 
-  // 3. Pre-check to confirm the email belongs to a homeowner (from the FIRST code)
+  // 3. Pre-check to confirm the email belongs to a homeowner
   const handlePreCheck = async (checkEmail: string) => {
     try {
       const { exists, userType } = await checkIfEmailExists(checkEmail);
@@ -68,9 +65,7 @@ const HomeownerLogin = () => {
       }
       if (userType !== 'homeowner') {
         toast.error('Email belongs to a professional account. Use professional login.');
-        setErrorMessage(
-          'This email is registered as a professional. Please use the professional login.'
-        );
+        setErrorMessage('This email is registered as a professional. Please use the professional login.');
         return false;
       }
       return true;
@@ -81,7 +76,7 @@ const HomeownerLogin = () => {
     }
   };
 
-  // 4. Full login with password (from the FIRST code)
+  // 4. Full login with password
   const handleLoginWithPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -120,7 +115,6 @@ const HomeownerLogin = () => {
       }
 
       toast.success('Login successful!');
-      // Using the FIRST code’s approach (replace or not is up to you)
       navigate('/homeowner/dashboard', { replace: true });
     } catch (err: any) {
       toast.error(err.message);
@@ -130,7 +124,7 @@ const HomeownerLogin = () => {
     }
   };
 
-  // 5. OTP login flow (from the FIRST code)
+  // 5. OTP login flow
   const handleLoginWithOTP = async () => {
     setErrorMessage('');
     if (!email) {
@@ -147,7 +141,7 @@ const HomeownerLogin = () => {
     }
   };
 
-  // 6. Google OAuth (from the FIRST code)
+  // 6. Google OAuth
   const handleLoginWithGoogle = async () => {
     setErrorMessage('');
     try {
@@ -168,7 +162,6 @@ const HomeownerLogin = () => {
     }
   };
 
-  // 7. Return the DESIGN from the SECOND code
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       {/* Title */}
@@ -248,7 +241,6 @@ const HomeownerLogin = () => {
                 </label>
               </div>
               <div className="text-sm">
-                {/* Keep FIRST code's route for 'Forgot your password?' */}
                 <Link
                   to="/auth/reset-password"
                   className="font-medium text-[#105298] hover:text-blue-700"

@@ -1,4 +1,3 @@
-// src/pages/homeowner/HomeownerSignUp.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -54,8 +53,8 @@ const HomeownerSignUp = () => {
       }
     } else {
       toast.success('Account created! Please check your email to verify.');
-      // Optionally: navigate('/auth/please-confirm-email', { state: { email: formData.email } });
-      navigate('/homeowner/login');
+      // Redirect to Please Confirm Email page with email in state
+      navigate('/auth/please-confirm-email', { state: { email: formData.email } });
     }
   };
 

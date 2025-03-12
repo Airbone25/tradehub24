@@ -1,4 +1,3 @@
-// src/pages/auth/PleaseConfirmEmail.tsx
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -12,7 +11,7 @@ const PleaseConfirmEmail: React.FC = () => {
 
   useEffect(() => {
     if (!email) {
-      // If no email in state, redirect
+      // If no email in state, redirect back to sign-up
       navigate('/homeowner/signup');
       return;
     }
