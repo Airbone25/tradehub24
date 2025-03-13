@@ -13,7 +13,7 @@ const HomeownerLogin = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // 1. Check if user is already logged in
+  // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
       const {
@@ -29,7 +29,7 @@ const HomeownerLogin = () => {
     checkSession();
   }, [navigate]);
 
-  // 2. Handle tokens from magic link or social login
+  // Handle tokens from magic link or social login
   useEffect(() => {
     async function parseHashTokens() {
       if (window.location.hash) {
@@ -54,7 +54,7 @@ const HomeownerLogin = () => {
     parseHashTokens();
   }, [navigate]);
 
-  // 3. Pre-check to confirm the email belongs to a homeowner
+  // Pre-check to confirm the email belongs to a homeowner
   const handlePreCheck = async (checkEmail: string) => {
     try {
       const { exists, userType } = await checkIfEmailExists(checkEmail);
@@ -76,14 +76,13 @@ const HomeownerLogin = () => {
     }
   };
 
-  // 4. Full login with password
+  // Full login with password
   const handleLoginWithPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setLoading(true);
 
     try {
-      // First verify the user type
       const { exists, userType } = await checkIfEmailExists(email);
       if (!exists) {
         toast.error('No account found. Please sign up.');
@@ -96,7 +95,6 @@ const HomeownerLogin = () => {
         return;
       }
 
-      // Proceed with login
       const { data, error } = await signInWithEmail(email, password);
       if (error) {
         toast.error(error);
@@ -104,7 +102,6 @@ const HomeownerLogin = () => {
         return;
       }
 
-      // Double check user type after login
       const sessionRes = await supabase.auth.getSession();
       const user = sessionRes.data.session?.user;
       const userMetadataType = user?.user_metadata?.user_type;
@@ -124,7 +121,7 @@ const HomeownerLogin = () => {
     }
   };
 
-  // 5. OTP login flow
+  // OTP login flow
   const handleLoginWithOTP = async () => {
     setErrorMessage('');
     if (!email) {
@@ -141,7 +138,7 @@ const HomeownerLogin = () => {
     }
   };
 
-  // 6. Google OAuth
+  // Google OAuth login
   const handleLoginWithGoogle = async () => {
     setErrorMessage('');
     try {
@@ -164,26 +161,21 @@ const HomeownerLogin = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      {/* Title */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="text-center text-3xl font-bold text-gray-900">
           Welcome back, Homeowner
         </h2>
       </div>
 
-      {/* Form Container */}
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-md rounded-lg sm:px-10">
-          {/* Error Message */}
           {errorMessage && (
             <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">
               {errorMessage}
             </div>
           )}
 
-          {/* Form */}
           <form className="space-y-6" onSubmit={handleLoginWithPassword}>
-            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
@@ -205,7 +197,6 @@ const HomeownerLogin = () => {
               </div>
             </div>
 
-            {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
@@ -227,7 +218,6 @@ const HomeownerLogin = () => {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -250,7 +240,6 @@ const HomeownerLogin = () => {
               </div>
             </div>
 
-            {/* Sign In Button */}
             <div>
               <button
                 type="submit"
@@ -265,7 +254,6 @@ const HomeownerLogin = () => {
             </div>
           </form>
 
-          {/* Divider */}
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -277,7 +265,6 @@ const HomeownerLogin = () => {
             </div>
           </div>
 
-          {/* OTP & Google Buttons */}
           <div className="mt-6 space-y-2">
             <button
               type="button"
@@ -304,7 +291,6 @@ const HomeownerLogin = () => {
             </button>
           </div>
 
-          {/* Sign up link */}
           <p className="mt-6 text-center text-sm text-gray-600">
             Don't have an account?{' '}
             <Link to="/homeowner/signup" className="font-medium text-[#105298] hover:text-blue-700">

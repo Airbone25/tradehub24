@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Building2, Briefcase, FileCheck, Mail, Phone, MapPin } from 'lucide-react';
+import { Building2, Briefcase, FileCheck } from 'lucide-react';
+import { useUser } from '../../contexts/UserContext';
+import { toast } from 'react-toastify';
+import { updateProfile } from '../../services/profileService';
 
-export function ProfessionalRegistration() {
+const ProfessionalRegistration = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -17,7 +20,10 @@ export function ProfessionalRegistration() {
     establishmentYear: '',
     insuranceNumber: '',
     tradeType: '',
+    // Future: ID upload field etc.
   });
+  const { profile } = useUser();
+  const navigate = useState<any>()[1]; // Replace with your navigate hook if needed
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -174,6 +180,25 @@ export function ProfessionalRegistration() {
     }
   };
 
+  // On final submit, update the professional's profile with additional details.
+  const handleFinalSubmit = async () => {
+    try {
+      // TODO: Add UK postcode validation and Google Maps geolocation integration here.
+      const updates = {
+        company_name: formData.companyName,
+        business_registration_number: formData.registrationNumber,
+        trade: formData.tradeType,
+        // Add other fields as needed
+      };
+      await updateProfile(profile!.id, updates);
+      toast.success('Profile updated successfully.');
+      // Redirect to professional dashboard (or next step)
+      // navigate('/professional/dashboard');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update profile');
+    }
+  };
+
   return (
     <div className="py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -218,7 +243,13 @@ export function ProfessionalRegistration() {
                 </button>
               )}
               <button
-                onClick={() => step < 3 ? setStep(step + 1) : console.log('Submit')}
+                onClick={() => {
+                  if (step < 3) {
+                    setStep(step + 1);
+                  } else {
+                    handleFinalSubmit();
+                  }
+                }}
                 className="ml-auto px-6 py-3 bg-[#e20000] text-white rounded-md hover:bg-[#cc0000]"
               >
                 {step === 3 ? 'Submit' : 'Next'}
@@ -229,7 +260,7 @@ export function ProfessionalRegistration() {
       </div>
     </div>
   );
-}
+};
 
 const steps = [
   {
@@ -245,3 +276,5 @@ const steps = [
     icon: <FileCheck className="w-5 h-5" />,
   },
 ];
+
+export default ProfessionalRegistration;

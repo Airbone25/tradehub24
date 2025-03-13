@@ -1,3 +1,4 @@
+// src/pages/homeowner/HomeownerEmailConfirmedCallback.tsx
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
@@ -15,7 +16,7 @@ const HomeownerEmailConfirmedCallback: React.FC = () => {
 
         if (accessToken && refreshToken) {
           // Set session so Supabase recognizes the user
-          const { data, error } = await supabase.auth.setSession({
+          const { error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });

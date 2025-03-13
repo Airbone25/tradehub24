@@ -1,20 +1,25 @@
-// src/contexts/UserContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../services/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { sendConfirmationEmail, sendWelcomeEmail } from '../services/emailService';
 
 export type UserType = 'homeowner' | 'professional';
 
 export interface UserProfile {
-  id: string;
-  user_id: string;
-  email: string;
+  id: string; // PK in profiles
   user_type: UserType;
-  created_at: string;
-  updated_at: string;
-  [key: string]: any;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  postcode?: string;
+  company_name?: string;
+  business_registration_number?: string;
+  trade?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export type AuthResponse = {
@@ -36,10 +41,16 @@ export interface UserContextProps {
   error: string | null;
   userType: UserType | null;
   isAuthenticated: boolean;
+
   updateProfile: (updates: ProfileUpdateData) => Promise<void>;
-  setUserType: (type: UserType) => Promise<void>;
+  setUserType: (type: UserType) => void;
   signIn: (email: string, password: string) => Promise<AuthResponse>;
-  signUp: (email: string, password: string, userType: UserType, profileData?: ProfileUpdateData) => Promise<AuthResponse>;
+  signUp: (
+    email: string,
+    password: string,
+    userType: UserType,
+    profileData?: ProfileUpdateData
+  ) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
   loginWithOTP: (email: string, userType: UserType) => Promise<AuthResponse>;
 }
@@ -60,19 +71,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userType, setUserTypeState] = useState<UserType | null>(null);
+
   const navigate = useNavigate();
 
+  // Fetch profile row by matching the "id" column
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .single();
       if (error) throw error;
       setProfile(data);
       if (data?.user_type) {
         setUserTypeState(data.user_type as UserType);
+        localStorage.setItem('lastUserType', data.user_type);
       }
       return data;
     } catch (err) {
@@ -88,10 +102,28 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
-
         if (session?.user) {
           setUser(session.user as AuthUser);
-          await fetchProfile(session.user.id);
+          let fetchedProfile = await fetchProfile(session.user.id);
+          if (!fetchedProfile) {
+            // Create profile if missing on sign in
+            const userTypeFromMetadata = session.user.user_metadata?.user_type || 'homeowner';
+            if (!session.user.email) {
+              throw new Error('User email is missing.');
+            }
+            const { error: createProfileError } = await supabase.from('profiles').insert({
+              id: session.user.id,
+              email: session.user.email.toLowerCase(),
+              user_type: userTypeFromMetadata,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+            if (createProfileError) {
+              console.error('Error creating profile on sign in:', createProfileError);
+            } else {
+              await fetchProfile(session.user.id);
+            }
+          }
         }
       } catch (err) {
         console.error('Error initializing auth:', err);
@@ -103,10 +135,30 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
 
+    // Listen for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         setUser(session.user as AuthUser);
-        await fetchProfile(session.user.id);
+        let fetchedProfile = await fetchProfile(session.user.id);
+        if (!fetchedProfile) {
+          const userTypeFromMetadata = session.user.user_metadata?.user_type || 'homeowner';
+          if (!session.user.email) {
+            console.error('User email is missing on auth change.');
+            return;
+          }
+          const { error: createProfileError } = await supabase.from('profiles').insert({
+            id: session.user.id,
+            email: session.user.email.toLowerCase(),
+            user_type: userTypeFromMetadata,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+          if (createProfileError) {
+            console.error('Error creating profile on auth change:', createProfileError);
+          } else {
+            await fetchProfile(session.user.id);
+          }
+        }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setProfile(null);
@@ -120,20 +172,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
   }, [navigate]);
 
+  // updateProfile: filter out user_type updates.
   const updateProfile = async (updates: ProfileUpdateData) => {
     try {
       setLoading(true);
       if (!user) throw new Error('No user logged in');
+
+      const { user_type, ...allowedUpdates } = updates;
       const { data, error } = await supabase
         .from('profiles')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('user_id', user.id)
+        .update({
+          ...allowedUpdates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
         .select()
         .single();
       if (error) throw error;
       setProfile(data);
       if (data.user_type) {
         setUserTypeState(data.user_type as UserType);
+        localStorage.setItem('lastUserType', data.user_type);
       }
     } catch (err) {
       console.error('Error updating profile:', err);
@@ -144,98 +203,110 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const setUserType = async (type: UserType): Promise<void> => {
-    if (!user) {
-      throw new Error('No user logged in');
-    }
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          user_type: type,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      setUserTypeState(type);
-    } catch (error) {
-      console.error('Error setting user type:', error);
-      toast.error('Failed to set user type');
-      throw error;
-    }
+  const setUserType = (type: UserType) => {
+    setUserTypeState(type);
   };
 
+  // signIn: If profile row is missing after successful login, create it.
   const signIn = async (email: string, password: string): Promise<AuthResponse> => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-
       if (data.user) {
-        await fetchProfile(data.user.id);
+        let fetchedProfile = await fetchProfile(data.user.id);
+        if (!fetchedProfile) {
+          const userTypeFromMetadata = data.user.user_metadata?.user_type || 'homeowner';
+          if (!data.user.email) {
+            throw new Error('User email is missing.');
+          }
+          const { error: createError } = await supabase.from('profiles').upsert({
+            id: data.user.id,
+            email: data.user.email.toLowerCase(),
+            user_type: userTypeFromMetadata,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+          if (createError) throw createError;
+          fetchedProfile = await fetchProfile(data.user.id);
+        }
       }
-
       return { success: true, message: 'Successfully signed in', data };
     } catch (error) {
       console.error('Error signing in:', error);
-      return { 
-        success: false, 
-        message: error instanceof Error ? error.message : 'Failed to sign in' 
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to sign in',
       };
     }
   };
 
+  // signUp: Let Supabase Auth handle duplicate emails.
   const signUp = async (
-    email: string, 
-    password: string, 
-    userType: UserType, 
+    email: string,
+    password: string,
+    userType: UserType,
     profileData?: ProfileUpdateData
   ): Promise<AuthResponse> => {
     try {
+      const redirectUrl =
+        userType === 'homeowner'
+          ? `${window.location.origin}/homeowner/email-confirmed`
+          : `${window.location.origin}/professional/email-confirmed`;
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: { user_type: userType },
+        },
       });
-
       if (authError) throw authError;
 
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({ 
-            ...profileData, 
-            user_id: authData.user.id,
-            email,
-            user_type: userType,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-
+      // When email confirmation is enabled, authData.session is typically null.
+      // If a session exists, immediately upsert profile.
+      if (authData.session && authData.user) {
+        console.log("Authenticated user id in signUp:", authData.user.id);
+        if (!authData.user.email) {
+          throw new Error('User email is missing.');
+        }
+        const { error: profileError } = await supabase.from('profiles').upsert({
+          id: authData.user.id,
+          email: authData.user.email.toLowerCase(),
+          user_type: userType,
+          first_name: profileData?.first_name || null,
+          last_name: profileData?.last_name || null,
+          phone: profileData?.phone || null,
+          postcode: profileData?.postcode || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
         if (profileError) throw profileError;
-        setUserTypeState(userType);
 
-        return { 
-          success: true, 
-          message: 'Successfully signed up. Please check your email for confirmation.',
-          data: authData 
-        };
+        await sendConfirmationEmail(email.toLowerCase(), userType);
+        await sendWelcomeEmail(email.toLowerCase(), userType);
+
+        setUserTypeState(userType);
+        localStorage.setItem('lastUserType', userType);
+      } else {
+        console.log("No active session returned from signUp; waiting for email confirmation.");
       }
 
-      throw new Error('Failed to create user');
+      return {
+        success: true,
+        message: 'Successfully signed up. Please check your email for confirmation.',
+        data: authData,
+      };
     } catch (error) {
       console.error('Error signing up:', error);
-      return { 
-        success: false, 
-        message: error instanceof Error ? error.message : 'Failed to sign up' 
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to sign up',
       };
     }
   };
 
+  // signOut
   const signOut = async () => {
     try {
       setLoading(true);
@@ -254,6 +325,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // loginWithOTP
   const loginWithOTP = async (email: string, type: UserType): Promise<AuthResponse> => {
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -285,7 +357,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signUp,
         signOut,
-        loginWithOTP
+        loginWithOTP,
       }}
     >
       {children}

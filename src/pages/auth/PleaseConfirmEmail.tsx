@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { supabase } from '../../services/supabaseClient';
 
 const PleaseConfirmEmail: React.FC = () => {
   const location = useLocation();
@@ -9,6 +10,7 @@ const PleaseConfirmEmail: React.FC = () => {
 
   const email = (location.state as { email?: string })?.email || '';
 
+  // Countdown timer effect: when time runs out, redirect to signup.
   useEffect(() => {
     if (!email) {
       // If no email in state, redirect back to sign-up
@@ -30,6 +32,25 @@ const PleaseConfirmEmail: React.FC = () => {
     return () => clearInterval(timer);
   }, [email, navigate]);
 
+  // Polling effect: Check every 5 seconds if the user has confirmed their email.
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      // Check for an active session (via cookies)
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData.session) {
+        const user = sessionData.session.user;
+        // If email_confirmed_at is set, the email is confirmed.
+        if (user.email_confirmed_at) {
+          clearInterval(interval);
+          toast.success('Email confirmed! Redirecting to login...');
+          navigate('/homeowner/login');
+        }
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [navigate]);
+
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
     const s = secs % 60;
@@ -48,7 +69,7 @@ const PleaseConfirmEmail: React.FC = () => {
           Time left: {formatTime(timeLeft)}
         </div>
         <p className="text-gray-600 mb-6">
-          Once you confirm, you can log in using your email and password.
+          Once you confirm, you will be redirected to the login page.
         </p>
         <button
           onClick={() => navigate('/homeowner/signup')}

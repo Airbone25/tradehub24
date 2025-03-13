@@ -1,5 +1,5 @@
 // src/pages/professional/ProfessionalRegistrationStep4.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
 import { toast } from 'react-toastify';
@@ -29,7 +29,6 @@ const ProfessionalRegistrationStep4 = () => {
     }
 
     try {
-      // 1. Upload files to Supabase Storage if provided
       let proofOfIDUrl: string | null = null;
       let liabilityUrl: string | null = null;
 
@@ -49,8 +48,7 @@ const ProfessionalRegistrationStep4 = () => {
         liabilityUrl = data?.path || null;
       }
 
-      // 2. Save the file paths in the "professionals" table
-      const { data: dbData, error: dbError } = await supabase
+      const { error: dbError } = await supabase
         .from('professionals')
         .update({
           proof_of_id: proofOfIDUrl,
@@ -58,7 +56,6 @@ const ProfessionalRegistrationStep4 = () => {
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id)
-        .select()
         .single();
 
       if (dbError) throw dbError;
@@ -66,7 +63,8 @@ const ProfessionalRegistrationStep4 = () => {
       toast.success('All steps completed! You can now access your dashboard.');
       navigate('/professional/dashboard');
     } catch (err: any) {
-      toast.error(err.message);
+      console.error('Error in Step4:', err);
+      toast.error(err.message || 'Failed to complete step 4');
     }
   };
 
@@ -74,9 +72,7 @@ const ProfessionalRegistrationStep4 = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md mb-8 text-center">
         <h2 className="text-3xl font-bold text-gray-900">Upload Documents</h2>
-        <p className="mt-2 text-sm text-gray-600">
-          Step 4 of 4
-        </p>
+        <p className="mt-2 text-sm text-gray-600">Step 4 of 4</p>
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">

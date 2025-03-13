@@ -1,4 +1,3 @@
-// src/services/adminActionsService.ts
 // THIS FILE MUST RUN ON SERVER (with service_role key)! Not in client code.
 import { createClient } from '@supabase/supabase-js';
 

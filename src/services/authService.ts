@@ -1,6 +1,5 @@
 import { supabase } from './supabaseClient';
-import { checkIfEmailExists } from './emailService';
-import { sendConfirmationEmail, sendWelcomeEmail } from './emailService';
+import { checkIfEmailExists, sendConfirmationEmail, sendWelcomeEmail } from './emailService';
 
 export type UserType = 'homeowner' | 'professional' | 'admin';
 
@@ -38,12 +37,11 @@ export const signUpWithEmail = async (
       return { data: null, error: 'Email already registered. Please log in.' };
     }
 
-    // Create user in Supabase Auth with a redirect URL set to our callback route.
+    // Create user in Supabase Auth with a redirect URL set to our dedicated callback route.
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        // Here we set emailRedirectTo to our dedicated email-confirmed callback route.
         emailRedirectTo: options.emailRedirectTo || `${window.location.origin}/auth/email-confirmed`,
         data: {
           user_type: userType,
@@ -54,8 +52,8 @@ export const signUpWithEmail = async (
 
     if (error) throw error;
 
-    // For homeowners, send the branded emails.
-    if (userType === 'homeowner') {
+    // Send branded emails for homeowners and professionals.
+    if (userType === 'homeowner' || userType === 'professional') {
       const normalizedEmail = email.toLowerCase();
       await sendConfirmationEmail(normalizedEmail, userType);
       await sendWelcomeEmail(normalizedEmail, userType);
@@ -70,7 +68,6 @@ export const signUpWithEmail = async (
 
 export const signInWithEmail = async (email: string, password: string) => {
   try {
-    // Always convert email to lowercase for consistency
     const normalizedEmail = email.toLowerCase();
 
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -79,10 +76,8 @@ export const signInWithEmail = async (email: string, password: string) => {
     });
 
     if (error) {
-      // Check if it's an invalid login error
       if (error.message.includes('Invalid login credentials')) {
-        // Try to check if email exists to give better error message
-        const { exists, userType } = await checkIfEmailExists(normalizedEmail);
+        const { exists } = await checkIfEmailExists(normalizedEmail);
         if (!exists) {
           throw new Error('No account found with this email. Please sign up.');
         }
@@ -91,9 +86,8 @@ export const signInWithEmail = async (email: string, password: string) => {
       throw error;
     }
 
-    // Verify the user exists in profiles table
     if (data.user) {
-      // First try to get existing profile
+      // Retrieve user role from profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('user_type')
@@ -104,8 +98,8 @@ export const signInWithEmail = async (email: string, password: string) => {
         throw profileError;
       }
 
+      // If no profile exists, create one with default values.
       if (!profile) {
-        // Profile doesn't exist, create it from user metadata
         const userType = data.user.user_metadata?.user_type || 'homeowner';
         const { error: createProfileError } = await supabase.from('profiles').insert({
           id: data.user.id,
@@ -121,16 +115,21 @@ export const signInWithEmail = async (email: string, password: string) => {
         }
       }
 
-      // Log the login activity
+      // Record login activity (optional – ensure the login_activity table exists with proper RLS)
       const { error: activityError } = await supabase.from('login_activity').insert({
         user_id: data.user.id,
         login_time: new Date().toISOString(),
         ip_address: 'client-side',
         user_agent: navigator.userAgent,
       });
-
       if (activityError) {
         console.error('Error logging activity:', activityError);
+      }
+
+      // Smart login: remember the last used role in localStorage.
+      const userRole = profile ? profile.user_type : data.user.user_metadata?.user_type;
+      if (userRole) {
+        localStorage.setItem('lastUserType', userRole);
       }
     }
 

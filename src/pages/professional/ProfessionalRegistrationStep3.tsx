@@ -17,16 +17,20 @@ const ProfessionalRegistrationStep3 = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      const { data, error } = await supabase
-        .from('professionals')
-        .select('company_summary, services_offered')
-        .eq('user_id', user.id)
-        .single();
-      if (!error && data) {
-        setFormData({
-          companySummary: data.company_summary || '',
-          servicesOffered: data.services_offered || '',
-        });
+      try {
+        const { data, error } = await supabase
+          .from('professionals')
+          .select('company_summary, services_offered')
+          .eq('user_id', user.id)
+          .single();
+        if (!error && data) {
+          setFormData({
+            companySummary: data.company_summary || '',
+            servicesOffered: data.services_offered || '',
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching step3 data:', err);
       }
     };
     fetchData();
@@ -34,7 +38,7 @@ const ProfessionalRegistrationStep3 = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,7 +64,8 @@ const ProfessionalRegistrationStep3 = () => {
       toast.success('Step 3 saved!');
       navigate('/professional/registration-step4');
     } catch (err: any) {
-      toast.error(err.message);
+      console.error('Error in Step3:', err);
+      toast.error(err.message || 'Failed to save step 3');
     }
   };
 
@@ -68,9 +73,7 @@ const ProfessionalRegistrationStep3 = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md mb-8 text-center">
         <h2 className="text-3xl font-bold text-gray-900">Company Profile</h2>
-        <p className="mt-2 text-sm text-gray-600">
-          Step 3 of 4
-        </p>
+        <p className="mt-2 text-sm text-gray-600">Step 3 of 4</p>
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">

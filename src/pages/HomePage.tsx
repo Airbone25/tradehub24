@@ -1,8 +1,9 @@
+// src/pages/HomePage.tsx
 import React from 'react';
-import { Shield, Clock, Star, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Shield, Clock, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import man1Image from '../assets/man-1.png';
-import { useUser } from '../contexts/UserContext';
+import { useUser } from '../contexts/UserContext'; // <-- Merged user context
 import { ProfessionalHome } from './professional/ProfessionalHome';
 
 const homeownerTestimonials = [
@@ -27,36 +28,17 @@ const homeownerTestimonials = [
     id: '3',
     name: 'Emily Davis',
     role: 'Homeowner',
-    content:
-      'The guarantee gave me peace of mind. The carpenter did an amazing job!',
+    content: 'The guarantee gave me peace of mind. The carpenter did an amazing job!',
     avatar:
       'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
   },
 ];
 
-const benefits = [
-  {
-    title: "Verified Professionals",
-    description: "Every professional on our platform is thoroughly vetted and background-checked for your peace of mind."
-  },
-  {
-    title: "Secure Payments",
-    description: "Our secure payment system protects both homeowners and professionals throughout the project."
-  },
-  {
-    title: "Quality Guarantee",
-    description: "We stand behind the quality of work with our satisfaction guarantee."
-  },
-  {
-    title: "24/7 Support",
-    description: "Our dedicated support team is available around the clock to help with any questions or concerns."
-  }
-];
-
 export function HomePage() {
-  const { userType } = useUser();
+  const { userType } = useUser(); // merged context
+  const isProfessional = userType === 'professional';
 
-  if (userType === 'professional') {
+  if (isProfessional) {
     return <ProfessionalHome />;
   }
 
@@ -77,23 +59,25 @@ export function HomePage() {
                 Connect with verified local trade professionals for all your home improvement needs.
               </p>
               <div className="max-w-3xl">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex flex-col md:flex-row gap-4 bg-white rounded-lg p-2 w-full">
-                    <input
-                      type="text"
-                      placeholder="What service do you need?"
-                      className="flex-grow px-4 py-3 text-gray-900 rounded-md focus:outline-none"
-                    />
-                    <button className="bg-[#e20000] text-white px-8 py-3 rounded-md hover:bg-[#cc0000] transition-colors">
-                      Find Pros
-                    </button>
-                  </div>
+                <div className="flex flex-col md:flex-row gap-4 bg-white rounded-lg p-2">
+                  <input
+                    type="text"
+                    placeholder="What service do you need?"
+                    className="flex-grow px-4 py-3 text-gray-900 rounded-md focus:outline-none"
+                  />
+                  <button className="bg-[#e20000] text-white px-8 py-3 rounded-md hover:bg-[#cc0000] transition-colors">
+                    Find Pros
+                  </button>
                 </div>
               </div>
             </div>
             <div className="flex justify-center">
               <Link to="/" className="flex-shrink-0 flex items-center space-x-2">
-                <img src={man1Image} alt="Friendly Tradesperson" className="max-h-[428px] object-contain" />
+                <img
+                  src={man1Image}
+                  alt="Friendly Tradesperson"
+                  className="max-h-[428px] object-contain"
+                />
               </Link>
             </div>
           </div>

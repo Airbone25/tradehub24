@@ -1,16 +1,33 @@
-// src/pages/professional/ProfessionalLogin.tsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
-import { signInWithEmail } from '../../services/authService';
+import { toast } from 'react-toastify';
 import { Mail, Lock } from 'lucide-react';
+import { signInWithEmail } from '../../services/authService';
+import { checkIfEmailExists } from '../../services/emailService';
 
 const ProfessionalLogin = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Parse tokens from hash if returned from magic link or Google
+  useEffect(() => {
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        const userType = session.user.user_metadata?.user_type;
+        if (userType === 'professional') {
+          navigate('/professional/dashboard');
+        }
+      }
+    };
+    checkSession();
+  }, [navigate]);
+
   useEffect(() => {
     async function parseHashTokens() {
       if (window.location.hash) {
@@ -26,70 +43,133 @@ const ProfessionalLogin = () => {
             console.error('Error setting session from hash (ProfessionalLogin):', error.message);
           } else {
             console.log('Session stored from hash (ProfessionalLogin):', data);
+            navigate('/professional/dashboard');
           }
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
     }
     parseHashTokens();
-  }, []);
+  }, [navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { data, error } = await signInWithEmail(email, password);
-    if (error) {
-      alert(error);
-      return;
-    }
-
-    // Confirm user_type
-    const sessionRes = await supabase.auth.getSession();
-    const user = sessionRes.data?.session?.user;
-    if (user?.user_metadata?.user_type !== 'professional') {
-      await supabase.auth.signOut();
-      alert('Access denied: you are not a professional user.');
-    } else {
-      navigate('/professional/dashboard');
+  const handlePreCheck = async (checkEmail: string) => {
+    try {
+      const { exists, userType } = await checkIfEmailExists(checkEmail);
+      if (!exists) {
+        toast.error('No account found. Please sign up.');
+        navigate('/professional/signup', { state: { email: checkEmail } });
+        return false;
+      }
+      if (userType !== 'professional') {
+        toast.error('Email belongs to a homeowner account. Use homeowner login.');
+        setErrorMessage('This email is registered as a homeowner. Please use the homeowner login.');
+        return false;
+      }
+      return true;
+    } catch (err: any) {
+      toast.error(err.message || 'Error checking email');
+      setErrorMessage(err.message);
+      return false;
     }
   };
 
-  const handleLoginWithOTP = () => {
-    navigate('/professional/login-otp');
+  const handleLoginWithPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setLoading(true);
+
+    try {
+      const { exists, userType } = await checkIfEmailExists(email);
+      if (!exists) {
+        toast.error('No account found. Please sign up.');
+        navigate('/professional/signup', { state: { email } });
+        return;
+      }
+      if (userType && userType !== 'professional') {
+        toast.error('This email is registered as a homeowner. Please use the homeowner login.');
+        navigate('/homeowner/login');
+        return;
+      }
+
+      const { data, error } = await signInWithEmail(email, password);
+      if (error) {
+        toast.error(error);
+        setErrorMessage(error);
+        return;
+      }
+
+      const sessionRes = await supabase.auth.getSession();
+      const user = sessionRes.data.session?.user;
+      const userMetadataType = user?.user_metadata?.user_type;
+
+      if (userMetadataType && userMetadataType !== 'professional') {
+        await supabase.auth.signOut();
+        throw new Error('Access denied: you are not a professional.');
+      }
+
+      toast.success('Login successful!');
+      navigate('/professional/dashboard', { replace: true });
+    } catch (err: any) {
+      toast.error(err.message);
+      setErrorMessage(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLoginWithOTP = async () => {
+    setErrorMessage('');
+    if (!email) {
+      toast.error('Please enter your email');
+      return;
+    }
+    try {
+      const canProceed = await handlePreCheck(email);
+      if (!canProceed) return;
+      navigate('/professional/login-otp', { state: { email } });
+    } catch (err: any) {
+      toast.error(err.message);
+      setErrorMessage(err.message);
+    }
   };
 
   const handleLoginWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: 'https://www.tradehub24.com/professional/login',
-      },
-    });
-    if (error) alert(error.message);
+    setErrorMessage('');
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/professional/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      toast.error(err.message);
+      setErrorMessage(err.message);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      {/* Title */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="text-center text-3xl font-bold text-gray-900">
-          Sign in to your professional account
+          Welcome back, Professional
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Don't have an account?{' '}
-          <Link
-            to="/professional/signup"
-            className="font-medium text-[#105298] hover:text-blue-700"
-          >
-            Sign up
-          </Link>
-        </p>
       </div>
 
-      {/* Form */}
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-md rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Email */}
+          {errorMessage && (
+            <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">
+              {errorMessage}
+            </div>
+          )}
+
+          <form className="space-y-6" onSubmit={handleLoginWithPassword}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
@@ -105,13 +185,12 @@ const ProfessionalLogin = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm
                     focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
 
-            {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
@@ -127,13 +206,12 @@ const ProfessionalLogin = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm
                     focus:outline-none focus:ring-[#105298] focus:border-[#105298]"
                 />
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -148,7 +226,7 @@ const ProfessionalLogin = () => {
               </div>
               <div className="text-sm">
                 <Link
-                  to="/forgot-password"
+                  to="/auth/reset-password"
                   className="font-medium text-[#105298] hover:text-blue-700"
                 >
                   Forgot your password?
@@ -156,32 +234,41 @@ const ProfessionalLogin = () => {
               </div>
             </div>
 
-            {/* Sign In */}
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm 
-                  text-sm font-medium text-white bg-[#e20000] hover:bg-[#cc0000] 
-                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#105298]"
+                disabled={loading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm
+                  text-sm font-medium text-white bg-[#e20000] hover:bg-[#cc0000]
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#105298]
+                  disabled:opacity-50"
               >
-                Sign in
+                {loading ? 'Signing in...' : 'Sign in'}
               </button>
             </div>
           </form>
 
-          {/* Additional Buttons */}
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-6 space-y-2">
-            {/* Email OTP */}
             <button
               type="button"
               onClick={handleLoginWithOTP}
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm 
+              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm
                 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
             >
               Login with Email OTP
             </button>
 
-            {/* Google */}
             <button
               type="button"
               onClick={handleLoginWithGoogle}
@@ -197,6 +284,16 @@ const ProfessionalLogin = () => {
               <span>Continue with Google</span>
             </button>
           </div>
+
+          <p className="mt-6 text-center text-sm text-gray-600">
+            Don't have an account?{' '}
+            <Link
+              to="/professional/signup"
+              className="font-medium text-[#105298] hover:text-blue-700"
+            >
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
     </div>

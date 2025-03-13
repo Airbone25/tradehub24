@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
 import { toast } from 'react-toastify';
 
@@ -7,25 +7,19 @@ export const VerifyEmail: React.FC = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
 
   const resendVerificationEmail = async () => {
     try {
       setLoading(true);
-      
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email,
       });
-
       if (error) throw error;
-
-      // Always show the same message for security
       toast.success(
         'If an account exists with this email, a verification link has been sent.'
       );
     } catch (error: any) {
-      // Show the same message even on error for security
       toast.success(
         'If an account exists with this email, a verification link has been sent.'
       );

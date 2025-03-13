@@ -1,12 +1,12 @@
-// src/pages/professional/ProfessionalSignUp.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { signUpWithEmail } from '../../services/authService';
+import { useUser } from '../../contexts/UserContext';
 import { Mail, Lock, User, MapPin, Phone, Briefcase } from 'lucide-react';
 
 const ProfessionalSignUp = () => {
   const navigate = useNavigate();
+  const { signUp } = useUser();
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -16,58 +16,44 @@ const ProfessionalSignUp = () => {
     confirmPassword: '',
     companyName: '',
     trade: '',
-    postcode: '',
-    phone: '',
     businessRegistration: '',
+    phone: '',
+    postcode: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
 
-    const { data, error } = await signUpWithEmail(formData.email, formData.password, {
-      emailRedirectTo: 'https://www.tradehub24.com/professional/login',
-      data: {
-        user_type: 'professional',
-        phone: formData.phone,
-        postcode: formData.postcode,
-        companyName: formData.companyName,
-        trade: formData.trade,
-        businessRegistration: formData.businessRegistration,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-      },
+    const response = await signUp(formData.email, formData.password, 'professional', {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      phone: formData.phone,
+      postcode: formData.postcode,
+      // Company-related fields could be updated later via profile update.
     });
 
-    if (error) {
-      const lowerErr = error.toLowerCase();
-      if (
-        lowerErr.includes('already registered') ||
-        lowerErr.includes('duplicate key') ||
-        lowerErr.includes('exists')
-      ) {
-        toast.error('Email already exists. Please log in.');
-        navigate('/professional/login');
-      } else {
-        toast.error(error);
-      }
+    if (!response.success) {
+      toast.error(response.message);
     } else {
       toast.success('Professional account created! Check your email to verify.');
-      // navigate('/auth/please-confirm-email', { state: { email: formData.email } });
+      navigate('/professional/registration-step2');
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      {/* Heading */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="text-center text-3xl font-bold text-gray-900">
           Create your professional account
@@ -83,13 +69,11 @@ const ProfessionalSignUp = () => {
         </p>
       </div>
 
-      {/* Form */}
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-md rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* First & Last Name */}
             <div className="grid grid-cols-2 gap-4">
-              {/* firstName */}
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
                   First Name
@@ -111,7 +95,6 @@ const ProfessionalSignUp = () => {
                 </div>
               </div>
 
-              {/* lastName */}
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
                   Last Name
@@ -296,9 +279,12 @@ const ProfessionalSignUp = () => {
               </div>
             </div>
 
-            {/* Business Registration (Optional) */}
+            {/* Business Registration */}
             <div>
-              <label htmlFor="businessRegistration" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="businessRegistration"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Business Registration Number (Optional)
               </label>
               <div className="mt-1 relative">

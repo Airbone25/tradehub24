@@ -1,5 +1,4 @@
 // src/pages/professional/ProfessionalEmailConfirmedCallback.tsx
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
@@ -17,7 +16,7 @@ const ProfessionalEmailConfirmedCallback: React.FC = () => {
 
         if (accessToken && refreshToken) {
           // Set session so Supabase recognizes the user
-          const { data, error } = await supabase.auth.setSession({
+          const { error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
@@ -26,14 +25,14 @@ const ProfessionalEmailConfirmedCallback: React.FC = () => {
           // Double-check the user type
           const { data: { user } } = await supabase.auth.getUser();
           if (user?.user_metadata?.user_type === 'professional') {
-            // Go to professional dashboard
-            navigate('/professional/dashboard');
+            // Instead of going to the dashboard, redirect to professional login page
+            navigate('/professional/login');
           } else {
-            // If user_type not professional, fallback
+            // If user_type is not professional, fallback
             navigate('/');
           }
         } else {
-          // No tokens found => fallback
+          // No tokens found => fallback to professional login page
           navigate('/professional/login');
         }
       } catch (err: any) {

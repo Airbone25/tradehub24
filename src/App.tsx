@@ -1,12 +1,9 @@
-// src/App.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useIdleTimer } from './hooks/useIdleTimer';
 
-import { useIdleTimer } from './hooks/useIdleTimer'; // <-- NEW import
-
-// Layout & Components
 import { Layout } from './components/Layout';
 import TestConnection from './components/TestConnection';
 import { UserProvider } from './contexts/UserContext';
@@ -42,6 +39,13 @@ import { RateGuide } from './pages/help/RateGuide';
 import { PrivacyPolicy } from './pages/legal/PrivacyPolicy';
 import { TermsAndConditions } from './pages/legal/TermsAndConditions';
 
+// Email confirmation & password reset
+import PleaseConfirmEmail from './pages/auth/PleaseConfirmEmail';
+import HomeownerEmailConfirmedCallback from './pages/homeowner/HomeownerEmailConfirmedCallback';
+import ProfessionalEmailConfirmedCallback from './pages/professional/ProfessionalEmailConfirmedCallback';
+import ResetPassword from './pages/auth/ResetPassword';
+import UpdatePassword from './pages/auth/UpdatePassword';
+
 // Homeowner Auth & Pages
 import HomeownerSignUp from './pages/homeowner/HomeownerSignUp';
 import HomeownerLogin from './pages/homeowner/HomeownerLogin';
@@ -66,7 +70,6 @@ import ProfessionalSignUp from './pages/professional/ProfessionalSignUp';
 import ProfessionalLogin from './pages/professional/ProfessionalLogin';
 import ProfessionalLoginOTP from './pages/professional/ProfessionalLoginOTP';
 import { ProfessionalDashboard } from './pages/professional/ProfessionalDashboard';
-import { ProfessionalRegistration } from './pages/professional/ProfessionalRegistration';
 import { Complaints } from './pages/professional/Complaints';
 import { ProfessionalSupport } from './pages/professional/ProfessionalSupport';
 import ProfessionalProfile from './pages/professional/ProfessionalProfile';
@@ -81,26 +84,19 @@ import ProfessionalSettings from './pages/professional/Settings';
 import FindJobs from './pages/professional/FindJobs';
 import { HowItWorks as ProfessionalHowItWorks } from './pages/professional/HowItWorks';
 
-// NEW: Additional pages for email confirmation & password resets
-import PleaseConfirmEmail from './pages/auth/PleaseConfirmEmail';
-import ResetPassword from './pages/auth/ResetPassword';
-import UpdatePassword from './pages/auth/UpdatePassword';
-
-// NEW: Multi-step professional registration
+// Multi-step Professional Registration Pages
 import ProfessionalRegistrationStep2 from './pages/professional/ProfessionalRegistrationStep2';
 import ProfessionalRegistrationStep3 from './pages/professional/ProfessionalRegistrationStep3';
 import ProfessionalRegistrationStep4 from './pages/professional/ProfessionalRegistrationStep4';
 
 function App() {
-  // Auto-logout after 30 minutes of inactivity (example).
-  // Adjust to your preference, e.g. 15 * 60_000 for 15 minutes.
-  useIdleTimer({timeout:30 * 60_000});
+  // Auto-logout after 30 minutes of inactivity
+  useIdleTimer({ timeout: 30 * 60_000 });
 
   return (
     <Router>
       <UserProvider>
         <Layout>
-          {/* Toast container for react-toastify */}
           <ToastContainer
             position="top-right"
             autoClose={5000}
@@ -150,8 +146,10 @@ function App() {
             <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/legal/terms-and-conditions" element={<TermsAndConditions />} />
 
-            {/* NEW: Email confirmation & password reset */}
+            {/* Email confirmation & password reset */}
             <Route path="/auth/please-confirm-email" element={<PleaseConfirmEmail />} />
+            <Route path="/homeowner/email-confirmed" element={<HomeownerEmailConfirmedCallback />} />
+            <Route path="/professional/email-confirmed" element={<ProfessionalEmailConfirmedCallback />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/auth/update-password" element={<UpdatePassword />} />
 
@@ -165,13 +163,34 @@ function App() {
             <Route path="/homeowner/hiring-guide" element={<HiringGuide />} />
 
             {/* Protected Homeowner */}
-            <Route path="/homeowner/post-job" element={<PostJob />} />
-            <Route path="/homeowner/support" element={<SupportHomeowner />} />
-            <Route path="/homeowner/complaints" element={<ComplaintsHomeowner />} />
+            <Route
+              path="/homeowner/post-job"
+              element={
+                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/login">
+                  <PostJob />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/homeowner/support"
+              element={
+                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/login">
+                  <SupportHomeowner />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/homeowner/complaints"
+              element={
+                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/login">
+                  <ComplaintsHomeowner />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/homeowner/dashboard"
               element={
-                <ProtectedRoute requiredUserType="homeowner">
+                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/login">
                   <HomeownerDashboard />
                 </ProtectedRoute>
               }
@@ -179,7 +198,7 @@ function App() {
             <Route
               path="/homeowner/profile"
               element={
-                <ProtectedRoute requiredUserType="homeowner">
+                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/login">
                   <HomeownerProfile />
                 </ProtectedRoute>
               }
@@ -187,7 +206,7 @@ function App() {
             <Route
               path="/homeowner/messages"
               element={
-                <ProtectedRoute requiredUserType="homeowner">
+                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/login">
                   <HomeownerMessages />
                 </ProtectedRoute>
               }
@@ -195,7 +214,7 @@ function App() {
             <Route
               path="/homeowner/job-details"
               element={
-                <ProtectedRoute requiredUserType="homeowner">
+                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/login">
                   <JobDetails />
                 </ProtectedRoute>
               }
@@ -203,7 +222,7 @@ function App() {
             <Route
               path="/homeowner/professional-search"
               element={
-                <ProtectedRoute requiredUserType="homeowner">
+                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/login">
                   <ProfessionalSearch />
                 </ProtectedRoute>
               }
@@ -211,7 +230,7 @@ function App() {
             <Route
               path="/homeowner/reviews-and-ratings"
               element={
-                <ProtectedRoute requiredUserType="homeowner">
+                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/login">
                   <ReviewsAndRatings />
                 </ProtectedRoute>
               }
@@ -219,7 +238,7 @@ function App() {
             <Route
               path="/homeowner/payment-history"
               element={
-                <ProtectedRoute requiredUserType="homeowner">
+                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/login">
                   <HomeownerPaymentHistory />
                 </ProtectedRoute>
               }
@@ -227,7 +246,7 @@ function App() {
             <Route
               path="/homeowner/notifications"
               element={
-                <ProtectedRoute requiredUserType="homeowner">
+                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/login">
                   <Notifications />
                 </ProtectedRoute>
               }
@@ -235,7 +254,7 @@ function App() {
             <Route
               path="/homeowner/settings"
               element={
-                <ProtectedRoute requiredUserType="homeowner">
+                <ProtectedRoute requiredUserType="homeowner" redirectTo="/homeowner/login">
                   <HomeownerSettings />
                 </ProtectedRoute>
               }
@@ -253,12 +272,26 @@ function App() {
             <Route path="/professional/membership" element={<Subscription />} />
 
             {/* Protected Professional */}
-            <Route path="/professional/professional-support" element={<ProfessionalSupport />} />
-            <Route path="/professional/complaints" element={<Complaints />} />
+            <Route
+              path="/professional/professional-support"
+              element={
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/login">
+                  <ProfessionalSupport />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/professional/complaints"
+              element={
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/login">
+                  <Complaints />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/professional/dashboard"
               element={
-                <ProtectedRoute requiredUserType="professional">
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/login">
                   <ProfessionalDashboard />
                 </ProtectedRoute>
               }
@@ -266,7 +299,7 @@ function App() {
             <Route
               path="/professional/profile"
               element={
-                <ProtectedRoute requiredUserType="professional">
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/login">
                   <ProfessionalProfile />
                 </ProtectedRoute>
               }
@@ -274,7 +307,7 @@ function App() {
             <Route
               path="/professional/messages"
               element={
-                <ProtectedRoute requiredUserType="professional">
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/login">
                   <ProfessionalMessages />
                 </ProtectedRoute>
               }
@@ -282,7 +315,7 @@ function App() {
             <Route
               path="/professional/bid-management"
               element={
-                <ProtectedRoute requiredUserType="professional">
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/login">
                   <BidManagement />
                 </ProtectedRoute>
               }
@@ -290,7 +323,7 @@ function App() {
             <Route
               path="/professional/job-search"
               element={
-                <ProtectedRoute requiredUserType="professional">
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/login">
                   <JobSearch />
                 </ProtectedRoute>
               }
@@ -298,7 +331,7 @@ function App() {
             <Route
               path="/professional/availability-calendar"
               element={
-                <ProtectedRoute requiredUserType="professional">
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/login">
                   <AvailabilityCalendar />
                 </ProtectedRoute>
               }
@@ -306,7 +339,7 @@ function App() {
             <Route
               path="/professional/payment-history"
               element={
-                <ProtectedRoute requiredUserType="professional">
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/login">
                   <ProfessionalPaymentHistory />
                 </ProtectedRoute>
               }
@@ -314,7 +347,7 @@ function App() {
             <Route
               path="/professional/reviews"
               element={
-                <ProtectedRoute requiredUserType="professional">
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/login">
                   <ReviewsProfessional />
                 </ProtectedRoute>
               }
@@ -322,7 +355,7 @@ function App() {
             <Route
               path="/professional/subscription"
               element={
-                <ProtectedRoute requiredUserType="professional">
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/login">
                   <Subscription />
                 </ProtectedRoute>
               }
@@ -330,17 +363,17 @@ function App() {
             <Route
               path="/professional/settings"
               element={
-                <ProtectedRoute requiredUserType="professional">
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/login">
                   <ProfessionalSettings />
                 </ProtectedRoute>
               }
             />
 
-            {/* NEW: Multi-step Professional Registration */}
+            {/* Multi-step Professional Registration */}
             <Route
               path="/professional/registration-step2"
               element={
-                <ProtectedRoute requiredUserType="professional">
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
                   <ProfessionalRegistrationStep2 />
                 </ProtectedRoute>
               }
@@ -348,7 +381,7 @@ function App() {
             <Route
               path="/professional/registration-step3"
               element={
-                <ProtectedRoute requiredUserType="professional">
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
                   <ProfessionalRegistrationStep3 />
                 </ProtectedRoute>
               }
@@ -356,7 +389,7 @@ function App() {
             <Route
               path="/professional/registration-step4"
               element={
-                <ProtectedRoute requiredUserType="professional">
+                <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
                   <ProfessionalRegistrationStep4 />
                 </ProtectedRoute>
               }

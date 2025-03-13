@@ -33,11 +33,16 @@ const HomeownerSignUp = () => {
       return;
     }
 
-    const { data, error } = await signUpWithEmail(
-      formData.email,
-      formData.password,
-      'homeowner'
-    );
+    const { data, error } = await signUpWithEmail(formData.email, formData.password, {
+      emailRedirectTo: `${window.location.origin}/homeowner/email-confirmed`,
+      data: {
+        user_type: 'homeowner',
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        postcode: formData.postcode,
+        phone: formData.phone,
+      },
+    });
 
     if (error) {
       const lowerErr = error.toLowerCase();
@@ -53,14 +58,12 @@ const HomeownerSignUp = () => {
       }
     } else {
       toast.success('Account created! Please check your email to verify.');
-      // Redirect to Please Confirm Email page with email in state
       navigate('/auth/please-confirm-email', { state: { email: formData.email } });
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      {/* Title */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="text-center text-3xl font-bold text-gray-900">
           Create your homeowner account
@@ -76,17 +79,13 @@ const HomeownerSignUp = () => {
         </p>
       </div>
 
-      {/* Form */}
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-md rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* First & Last Name */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label
-                  htmlFor="firstName"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
                   First Name
                 </label>
                 <div className="mt-1 relative">
@@ -107,10 +106,7 @@ const HomeownerSignUp = () => {
               </div>
 
               <div>
-                <label
-                  htmlFor="lastName"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
                   Last Name
                 </label>
                 <div className="mt-1 relative">
@@ -177,10 +173,7 @@ const HomeownerSignUp = () => {
 
             {/* Confirm Password */}
             <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Confirm Password
               </label>
               <div className="mt-1 relative">
@@ -248,9 +241,10 @@ const HomeownerSignUp = () => {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm 
-                  text-sm font-medium text-white bg-[#e20000] hover:bg-[#cc0000] focus:outline-none 
-                  focus:ring-2 focus:ring-offset-2 focus:ring-[#105298]"
+                className="w-full flex justify-center py-2 px-4 border border-transparent 
+                  rounded-md shadow-sm text-sm font-medium text-white bg-[#e20000] 
+                  hover:bg-[#cc0000] focus:outline-none focus:ring-2 focus:ring-offset-2 
+                  focus:ring-[#105298]"
               >
                 Create Account
               </button>

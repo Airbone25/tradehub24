@@ -1,4 +1,3 @@
-// src/components/ProtectedRoute.tsx
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
@@ -24,6 +23,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const [emailVerified, setEmailVerified] = useState(false);
   const [verificationChecked, setVerificationChecked] = useState(false);
 
+  const defaultRedirect =
+    requiredUserType === 'homeowner'
+      ? '/homeowner/login'
+      : requiredUserType === 'professional'
+      ? '/professional/login'
+      : '/login';
+
   useEffect(() => {
     const checkEmailVerification = async () => {
       if (user?.id && requireEmailVerification) {
@@ -39,6 +45,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
     if (user?.id) {
       checkEmailVerification();
+    } else {
+      setVerificationChecked(true);
     }
   }, [user?.id, requireEmailVerification]);
 
@@ -51,8 +59,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (!isAuthenticated) {
-    const redirectPath = redirectTo || '/login';
-    return <Navigate to={redirectPath} state={{ from: location }} replace />;
+    return <Navigate to={redirectTo || defaultRedirect} state={{ from: location }} replace />;
   }
 
   if (requireEmailVerification && !emailVerified) {

@@ -17,23 +17,26 @@ const ProfessionalRegistrationStep2 = () => {
     postcode: '',
   });
 
-  // Optional: fetch existing data if user already has a row in "professionals"
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      const { data, error } = await supabase
-        .from('professionals')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-      if (!error && data) {
-        setFormData({
-          companyName: data.company_name || '',
-          registrationNumber: data.business_registration_number || '',
-          address: data.address || '',
-          city: data.city || '',
-          postcode: data.postcode || '',
-        });
+      try {
+        const { data, error } = await supabase
+          .from('professionals')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        if (!error && data) {
+          setFormData({
+            companyName: data.company_name || '',
+            registrationNumber: data.business_registration_number || '',
+            address: data.address || '',
+            city: data.city || '',
+            postcode: data.postcode || '',
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching step2 data:', err);
       }
     };
     fetchData();
@@ -41,7 +44,7 @@ const ProfessionalRegistrationStep2 = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,7 +55,6 @@ const ProfessionalRegistrationStep2 = () => {
     }
 
     try {
-      // Upsert data into the "professionals" table
       const { data, error } = await supabase
         .from('professionals')
         .upsert({
@@ -64,13 +66,14 @@ const ProfessionalRegistrationStep2 = () => {
           postcode: formData.postcode,
           updated_at: new Date().toISOString(),
         })
-        .single(); // 'upsert' + .single() merges or inserts
+        .single();
 
       if (error) throw error;
       toast.success('Step 2 saved!');
       navigate('/professional/registration-step3');
     } catch (err: any) {
-      toast.error(err.message);
+      console.error('Error in Step2:', err);
+      toast.error(err.message || 'Failed to save step 2');
     }
   };
 
@@ -78,9 +81,7 @@ const ProfessionalRegistrationStep2 = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md mb-8 text-center">
         <h2 className="text-3xl font-bold text-gray-900">Company Details</h2>
-        <p className="mt-2 text-sm text-gray-600">
-          Step 2 of 4
-        </p>
+        <p className="mt-2 text-sm text-gray-600">Step 2 of 4</p>
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">

@@ -1,16 +1,15 @@
-// src/hooks/useIdleTimer.ts
 import { useEffect, useRef } from 'react';
 import { signOut } from '../services/authService';
 import { toast } from 'react-toastify';
 
 interface UseIdleTimerProps {
-  timeout?: number; // timeout in minutes
+  timeout?: number; // in minutes
   onTimeout?: () => void;
   onActivity?: () => void;
 }
 
 export const useIdleTimer = ({
-  timeout = 30, // default 30 minutes
+  timeout = 30,
   onTimeout,
   onActivity,
 }: UseIdleTimerProps = {}) => {
@@ -22,26 +21,19 @@ export const useIdleTimer = ({
     }
 
     timeoutRef.current = setTimeout(async () => {
-      // Sign out the user
       await signOut();
-      
-      // Show timeout message
       toast.info('You have been logged out due to inactivity');
-      
-      // Call the onTimeout callback if provided
       if (onTimeout) {
         onTimeout();
       }
-    }, timeout * 60 * 1000); // Convert minutes to milliseconds
+    }, timeout * 60 * 1000);
 
-    // Call the onActivity callback if provided
     if (onActivity) {
       onActivity();
     }
   };
 
   useEffect(() => {
-    // Events that reset the timer
     const events = [
       'mousemove',
       'keydown',
@@ -50,16 +42,10 @@ export const useIdleTimer = ({
       'scroll',
       'resize',
     ];
-
-    // Add event listeners
     events.forEach(event => {
       window.addEventListener(event, resetTimer);
     });
-
-    // Start the initial timer
     resetTimer();
-
-    // Cleanup
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -70,7 +56,5 @@ export const useIdleTimer = ({
     };
   }, [timeout, onTimeout, onActivity]);
 
-  return {
-    resetTimer,
-  };
+  return { resetTimer };
 };
