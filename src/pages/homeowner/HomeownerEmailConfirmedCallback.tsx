@@ -1,47 +1,68 @@
-// src/pages/homeowner/HomeownerEmailConfirmedCallback.tsx
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
+import { toast } from 'react-toastify';
 
 const HomeownerEmailConfirmedCallback: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function handleConfirmation() {
+    const confirmEmail = async () => {
       try {
-        // Parse tokens from URL hash
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-
-        if (accessToken && refreshToken) {
-          // Set session so Supabase recognizes the user
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-          if (error) throw error;
-
-          // After successful session setup, redirect to the login page
-          navigate('/homeowner/login');
-        } else {
-          // No tokens found, fallback to login
-          navigate('/homeowner/login');
+        // Get the current user session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          toast.error('Unable to verify your session. Please try signing in.');
+          return navigate('/homeowner/login');
         }
-      } catch (err: any) {
-        console.error('Error in email confirmation callback:', err);
+
+        if (!session?.user) {
+          toast.error('No active session found. Please sign in.');
+          return navigate('/homeowner/login');
+        }
+
+        // Verify that email is actually confirmed in auth
+        if (!session.user.email_confirmed_at) {
+          toast.error('Email not confirmed yet. Please check your email.');
+          return navigate('/auth/please-confirm-email');
+        }
+
+        // Update the profiles table
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            confirmed: true, 
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', session.user.id)
+          .eq('confirmed', false); // Only update if not already confirmed
+
+        if (updateError) {
+          console.error('Profile update error:', updateError);
+          toast.error('Error updating your profile. Please contact support.');
+          return;
+        }
+
+        // Success! Redirect to dashboard
+        toast.success('Email confirmed successfully! Welcome to TradeHub24.');
+        navigate('/homeowner/dashboard');
+      } catch (error) {
+        console.error('Confirmation error:', error);
+        toast.error('An unexpected error occurred. Please try again.');
         navigate('/homeowner/login');
       }
-    }
+    };
 
-    handleConfirmation();
+    confirmEmail();
   }, [navigate]);
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gray-50">
-      <div className="bg-white p-8 rounded shadow-md">
-        <h2 className="text-2xl font-bold mb-4 text-gray-900">Confirming your account...</h2>
-        <p className="text-gray-700">Please wait while we verify your email.</p>
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-4">Confirming your email...</h2>
+        <p className="text-gray-600">Please wait while we verify your account.</p>
       </div>
     </div>
   );

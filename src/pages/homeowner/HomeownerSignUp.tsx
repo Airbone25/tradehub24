@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { signUpWithEmail } from '../../services/authService';
 import { Mail, Lock, User, MapPin, Phone } from 'lucide-react';
+import { supabase } from '../../services/supabaseClient';
 
 const HomeownerSignUp = () => {
   const navigate = useNavigate();
@@ -28,6 +29,39 @@ const HomeownerSignUp = () => {
       toast.error('Please enter your email');
       return;
     }
+
+    // Check if email exists in any role
+    try {
+      const { data: existingProfiles } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('email', formData.email.toLowerCase());
+
+      if (existingProfiles && existingProfiles.length > 0) {
+        const existingProfile = existingProfiles[0];
+        if (existingProfile.user_type === 'homeowner') {
+          toast.error('This email is already registered as a homeowner. Please log in.');
+          navigate('/homeowner/login');
+        } else if (existingProfile.user_type === 'professional') {
+          toast.error('This email is already registered as a professional. Please use a different email.');
+        } else {
+          toast.error('This email is already registered. Please use a different email.');
+        }
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking email uniqueness:', error);
+      toast.error('Error checking email availability. Please try again.');
+      return;
+    }
+
+    // Password strength validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      toast.error('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character');
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match');
       return;
