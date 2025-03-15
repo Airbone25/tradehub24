@@ -3,6 +3,7 @@ import { Building2, Briefcase, FileCheck } from 'lucide-react';
 import { useUser } from '../../contexts/UserContext';
 import { toast } from 'react-toastify';
 import { updateProfile } from '../../services/profileService';
+import { useNavigate } from 'react-router-dom';
 
 const ProfessionalRegistration = () => {
   const [step, setStep] = useState(1);
@@ -23,7 +24,7 @@ const ProfessionalRegistration = () => {
     // Future: ID upload field etc.
   });
   const { profile } = useUser();
-  const navigate = useState<any>()[1]; // Replace with your navigate hook if needed
+  const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

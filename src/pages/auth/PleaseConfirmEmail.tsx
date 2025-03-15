@@ -4,27 +4,34 @@ import { toast } from 'react-toastify';
 import { supabase } from '../../services/supabaseClient';
 
 const EMAIL_KEY = 'emailConfirmationAddress';
+const USER_TYPE_KEY = 'userTypeForConfirmation';
 
 const PleaseConfirmEmail: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Get email from location state or localStorage
+  // Get email and user type from location state or localStorage
   const emailFromState = (location.state as { email?: string })?.email || '';
+  const userTypeFromState = (location.state as { userType?: string })?.userType || '';
   const emailFromStorage = localStorage.getItem(EMAIL_KEY) || '';
+  const userTypeFromStorage = localStorage.getItem(USER_TYPE_KEY) || '';
   const email = emailFromState || emailFromStorage;
+  const userType = userTypeFromState || userTypeFromStorage || 'homeowner';
   
   useEffect(() => {
     if (!email) {
-      navigate('/homeowner/signup');
+      navigate(`/${userType}/signup`);
       return;
     }
     
-    // Store email for persistence
+    // Store email and user type for persistence
     if (emailFromState && !emailFromStorage) {
       localStorage.setItem(EMAIL_KEY, emailFromState);
     }
-  }, [email, emailFromState, emailFromStorage, navigate]);
+    if (userTypeFromState && !userTypeFromStorage) {
+      localStorage.setItem(USER_TYPE_KEY, userTypeFromState);
+    }
+  }, [email, emailFromState, emailFromStorage, userType, userTypeFromState, userTypeFromStorage, navigate]);
   
   // Polling: check every 3 seconds for email confirmation
   useEffect(() => {
@@ -60,12 +67,11 @@ const PleaseConfirmEmail: React.FC = () => {
 
           // Clear storage and redirect to dashboard
           toast.success('Email confirmed! Redirecting to dashboard...');
-          clearStorageAndRedirect('/homeowner/dashboard');
+          clearStorageAndRedirect(`/${userType}/dashboard`);
           return;
         }
 
         // If no session or email not confirmed, check the profile table
-        // This handles cases where the user might have confirmed in another tab/device
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('id, confirmed, user_type')
@@ -80,10 +86,10 @@ const PleaseConfirmEmail: React.FC = () => {
         // If profile is confirmed but we don't have a session, redirect to login
         if (profile?.confirmed) {
           toast.success('Email confirmed! Please log in to continue.');
-          clearStorageAndRedirect('/homeowner/login');
+          clearStorageAndRedirect(`/${profile.user_type}/login`);
           return;
         }
-      } catch (error) {
+      } catch (error: Error | unknown) {
         console.error('Error checking email confirmation:', error);
       }
     };
@@ -92,10 +98,11 @@ const PleaseConfirmEmail: React.FC = () => {
     checkEmailConfirmation(); // Check immediately on mount
     
     return () => clearInterval(interval);
-  }, [email, navigate]);
+  }, [email, userType, navigate]);
   
   const clearStorageAndRedirect = (path: string) => {
     localStorage.removeItem(EMAIL_KEY);
+    localStorage.removeItem(USER_TYPE_KEY);
     navigate(path);
   };
   
@@ -107,7 +114,7 @@ const PleaseConfirmEmail: React.FC = () => {
         type: 'signup',
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/homeowner/email-confirmed`,
+          emailRedirectTo: `${window.location.origin}/${userType}/email-confirmed`,
         },
       });
 
@@ -116,7 +123,7 @@ const PleaseConfirmEmail: React.FC = () => {
       }
       
       toast.info('Confirmation email sent again. Please check your inbox.');
-    } catch (error) {
+    } catch (error: Error | unknown) {
       console.error('Error resending confirmation email:', error);
       toast.error('Failed to resend confirmation email. Please try again.');
     }
@@ -141,7 +148,7 @@ const PleaseConfirmEmail: React.FC = () => {
             Resend Email
           </button>
           <button
-            onClick={() => clearStorageAndRedirect('/homeowner/signup')}
+            onClick={() => clearStorageAndRedirect(`/${userType}/signup`)}
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
           >
             Cancel &amp; Go Back

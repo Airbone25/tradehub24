@@ -583,12 +583,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       console.log('Signing out user');
       const { error } = await supabase.auth.signOut();
-      
       if (error) throw error;
-      
       setUser(null);
       setProfile(null);
       setUserTypeState(null);
+      window.localStorage.clear(); // Clear local storage upon logout
       navigate('/');
     } catch (err) {
       console.error('Error logging out:', err);
@@ -597,7 +596,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   const loginWithOTP = async (email: string, type: UserType): Promise<AuthResponse> => {
     try {

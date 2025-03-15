@@ -35,7 +35,7 @@ const ProfessionalEmailConfirmedCallback: React.FC = () => {
           // No tokens found => fallback to professional login page
           navigate('/professional/login');
         }
-      } catch (err: any) {
+      } catch (err: Error | unknown) {
         console.error('Error in professional email-confirmed-callback:', err);
         navigate('/professional/login');
       }
