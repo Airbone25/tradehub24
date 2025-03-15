@@ -30,7 +30,7 @@ const HomeownerLoginOTP: React.FC = () => {
           const accessToken = hashParams.get('access_token');
           const refreshToken = hashParams.get('refresh_token');
           if (accessToken && refreshToken) {
-            const { data, error } = await supabase.auth.setSession({
+            const { error } = await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken,
             });

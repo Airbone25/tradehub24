@@ -1,5 +1,5 @@
 // src/components/Navigation.tsx
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { Menu, X, User, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -9,7 +9,7 @@ import { useUser } from '../contexts/UserContext';
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
-  const { userType, setUserType, isAuthenticated, user, signOut } = useUser();
+  const { userType, setUserType, isAuthenticated, signOut } = useUser();
   const navigate = useNavigate();
 
   const currentUserType = userType || 'homeowner';
@@ -25,6 +25,7 @@ export function Navigation() {
     try {
       await signOut();
       navigate('/');
+      isAuthenticated === false;
       toast.success('Successfully logged out');
     } catch (error) {
       console.error('Error logging out:', error);
@@ -240,3 +241,4 @@ export function Navigation() {
     </nav>
   );
 }
+
