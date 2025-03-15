@@ -48,7 +48,7 @@ const HomeownerEmailConfirmedCallback: React.FC = () => {
         // Success! Redirect to dashboard
         toast.success('Email confirmed successfully! Welcome to TradeHub24.');
         navigate('/homeowner/dashboard');
-      } catch (error) {
+      } catch (error: Error | unknown) {
         console.error('Confirmation error:', error);
         toast.error('An unexpected error occurred. Please try again.');
         navigate('/homeowner/login');

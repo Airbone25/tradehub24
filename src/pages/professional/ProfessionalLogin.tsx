@@ -66,9 +66,9 @@ const ProfessionalLogin = () => {
         return false;
       }
       return true;
-    } catch (err: any) {
-      toast.error(err.message || 'Error checking email');
-      setErrorMessage(err.message);
+    } catch (err: Error | unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error checking email');
+      setErrorMessage(err instanceof Error ? err.message : 'An error occurred');
       return false;
     }
   };
@@ -109,9 +109,9 @@ const ProfessionalLogin = () => {
 
       toast.success('Login successful!');
       navigate('/professional/dashboard', { replace: true });
-    } catch (err: any) {
-      toast.error(err.message);
-      setErrorMessage(err.message);
+    } catch (err: Error | unknown) {
+      toast.error(err instanceof Error ? err.message : 'Login failed');
+      setErrorMessage(err instanceof Error ? err.message : 'An error occurred during login');
     } finally {
       setLoading(false);
     }
@@ -127,9 +127,9 @@ const ProfessionalLogin = () => {
       const canProceed = await handlePreCheck(email);
       if (!canProceed) return;
       navigate('/professional/login-otp', { state: { email } });
-    } catch (err: any) {
-      toast.error(err.message);
-      setErrorMessage(err.message);
+    } catch (err: Error | unknown) {
+      toast.error(err instanceof Error ? err.message : 'OTP login failed');
+      setErrorMessage(err instanceof Error ? err.message : 'An error occurred');
     }
   };
 
@@ -147,9 +147,9 @@ const ProfessionalLogin = () => {
         },
       });
       if (error) throw error;
-    } catch (err: any) {
-      toast.error(err.message);
-      setErrorMessage(err.message);
+    } catch (err: Error | unknown) {
+      toast.error(err instanceof Error ? err.message : 'Google login failed');
+      setErrorMessage(err instanceof Error ? err.message : 'An error occurred during Google login');
     }
   };
 

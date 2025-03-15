@@ -587,9 +587,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setProfile(null);
       setUserTypeState(null);
-      // window.localStorage.clear(); // Clear local storage upon logout
-      window.localStorage.removeItem('sb-gpvvjpqszrgndxyhuuzx-auth-token');
-      window.localStorage.removeItem('lastUserType');
       navigate('/');
     } catch (err) {
       console.error('Error logging out:', err);
@@ -598,7 +595,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   const loginWithOTP = async (email: string, type: UserType): Promise<AuthResponse> => {
     try {

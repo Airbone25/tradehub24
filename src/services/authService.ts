@@ -5,7 +5,21 @@ export type UserType = 'homeowner' | 'professional' | 'admin';
 
 interface SignUpOptions {
   emailRedirectTo?: string;
-  data?: Record<string, any>;
+  data: {
+    user_type: UserType;
+    first_name: string;
+    last_name: string;
+    postcode: string;
+    phone: string;
+    // Professional specific fields
+    company_name?: string;
+    company_status?: string;
+    registration_number?: string;
+    employee_count?: number;
+    establishment_year?: number;
+    insurance_number?: string;
+    trade_type?: string;
+  };
 }
 
 // Helper function to create a profile
@@ -61,16 +75,7 @@ const createProfile = async (userId: string, email: string, userType: UserType, 
 export const signUpWithEmail = async (
   email: string,
   password: string,
-  options: {
-    emailRedirectTo: string;
-    data: {
-      user_type: string;
-      first_name: string;
-      last_name: string;
-      postcode: string;
-      phone: string;
-    };
-  }
+  options: SignUpOptions
 ) => {
   try {
     // First, check if email exists
@@ -90,7 +95,7 @@ export const signUpWithEmail = async (
       email,
       password,
       options: {
-        emailRedirectTo: options.emailRedirectTo,
+        emailRedirectTo: options.emailRedirectTo || `${window.location.origin}/${options.data.user_type}/email-confirmed`,
         data: {
           user_type: options.data.user_type
         }
@@ -120,9 +125,35 @@ export const signUpWithEmail = async (
 
       if (profileError) {
         console.error('Error creating profile:', profileError);
-        // Attempt to delete the auth user if profile creation fails
-        await supabase.auth.admin.deleteUser(authData.user.id);
-        return { data: null, error: 'Failed to create user profile. Please try again.' };
+        // Don't delete auth user, just log error and continue
+        console.log('Profile creation failed but proceeding with auth account');
+      }
+
+      // If professional, create professional details
+      if (options.data.user_type === 'professional' && 
+          (options.data.company_name || options.data.trade_type)) {
+        const professionalData = {
+          id: authData.user.id,
+          company_name: options.data.company_name,
+          company_status: options.data.company_status,
+          registration_number: options.data.registration_number,
+          employee_count: options.data.employee_count,
+          establishment_year: options.data.establishment_year,
+          insurance_number: options.data.insurance_number,
+          trade_type: options.data.trade_type,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        const { error: proError } = await supabase
+          .from('professionals')
+          .insert([professionalData]);
+
+        if (proError) {
+          console.error('Error creating professional details:', proError);
+          // Don't fail the signup, just log the error
+          console.log('Professional details creation failed but proceeding');
+        }
       }
 
       // Send branded emails
@@ -160,7 +191,7 @@ export const signInWithEmail = async (email: string, password: string) => {
     }
 
     if (data.user) {
-      // Retrieve user profile to check confirmation status
+      // Get user profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -168,33 +199,12 @@ export const signInWithEmail = async (email: string, password: string) => {
         .single();
 
       if (profileError && profileError.code !== 'PGRST116') {
-        throw profileError;
+        console.error('Error fetching profile:', profileError);
       }
 
-      // If no profile exists, create one with default values
-      if (!profile) {
-        const userType = data.user.user_metadata?.user_type || 'homeowner';
-        const { error: createProfileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email: normalizedEmail,
-            user_type: userType,
-            confirmed: !!data.user.email_confirmed_at,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-
-        if (createProfileError) {
-          console.error('Error creating missing profile:', createProfileError);
-          throw new Error('Failed to access user profile. Please try again.');
-        }
-      } else if (!profile.confirmed && !data.user.email_confirmed_at) {
-        // User exists but email not confirmed - sign out and show error
-        await supabase.auth.signOut();
-        throw new Error('Please confirm your email before logging in. Check your inbox for the confirmation link.');
-      } else if (!profile.confirmed && data.user.email_confirmed_at) {
-        // Email is confirmed in auth but not in profile - update profile
+      // Allow login even if profile doesn't exist or email isn't confirmed
+      // Just update the profile if needed
+      if (profile && !profile.confirmed && data.user.email_confirmed_at) {
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ 
@@ -204,23 +214,24 @@ export const signInWithEmail = async (email: string, password: string) => {
           .eq('id', data.user.id);
           
         if (updateError) {
-          console.error('Error updating profile confirmation status:', updateError);
+          console.error('Error updating profile confirmation:', updateError);
         }
       }
 
-      // Record login activity (optional – ensure the login_activity table exists with proper RLS)
+      // Record login activity
       const { error: activityError } = await supabase.from('login_activity').insert({
         user_id: data.user.id,
         login_time: new Date().toISOString(),
         ip_address: 'client-side',
         user_agent: navigator.userAgent,
       });
+
       if (activityError) {
         console.error('Error logging activity:', activityError);
       }
 
-      // Smart login: remember the last used role in localStorage.
-      const userRole = profile ? profile.user_type : data.user.user_metadata?.user_type;
+      // Store last used role
+      const userRole = profile?.user_type || data.user.user_metadata?.user_type;
       if (userRole) {
         localStorage.setItem('lastUserType', userRole);
       }
