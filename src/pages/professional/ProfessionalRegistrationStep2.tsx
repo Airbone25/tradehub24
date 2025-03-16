@@ -19,6 +19,7 @@ const ProfessionalRegistrationStep2 = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      // if (!user) return;
       if (!user) return;
       try {
         const { data, error } = await supabase
@@ -29,7 +30,7 @@ const ProfessionalRegistrationStep2 = () => {
         if (!error && data) {
           setFormData({
             companyName: data.company_name || '',
-            registrationNumber: data.business_registration_number || '',
+            registrationNumber: data.registration_number || '',
             address: data.address || '',
             city: data.city || '',
             postcode: data.postcode || '',
@@ -51,6 +52,7 @@ const ProfessionalRegistrationStep2 = () => {
     e.preventDefault();
     if (!user) {
       toast.error('User not authenticated');
+      console.log(user)
       return;
     }
 
@@ -60,7 +62,7 @@ const ProfessionalRegistrationStep2 = () => {
         .upsert({
           user_id: user.id,
           company_name: formData.companyName,
-          business_registration_number: formData.registrationNumber,
+          registration_number: formData.registrationNumber,
           address: formData.address,
           city: formData.city,
           postcode: formData.postcode,

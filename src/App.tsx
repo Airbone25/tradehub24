@@ -104,7 +104,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 // Updated AdminProtectedRoute using import.meta.env for Vite and a correct URL parameter
 function AdminProtectedRoute({ children }: { children: JSX.Element }) {
   const { secret } = useParams<{ secret: string }>();
-  const adminSecret = import.meta.env.VITE_ADMIN_SECRET; // Updated to use Vite env var
+  const adminSecret = import.meta.env.VITE_ADMIN_SECRET;
+  localStorage.setItem('role','admin')
   if (secret !== adminSecret) {
     return <Navigate to="/" replace />;
   }
@@ -401,25 +402,23 @@ function App() {
               <Route
                 path="/professional/registration-step2"
                 element={
-                  <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
                     <ProfessionalRegistrationStep2 />
-                  </ProtectedRoute>
                 }
               />
               <Route
                 path="/professional/registration-step3"
                 element={
-                  <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
+                  // <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
                     <ProfessionalRegistrationStep3 />
-                  </ProtectedRoute>
+                  // </ProtectedRoute>
                 }
               />
               <Route
                 path="/professional/registration-step4"
                 element={
-                  <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
+                  // <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
                     <ProfessionalRegistrationStep4 />
-                  </ProtectedRoute>
+                  // </ProtectedRoute>
                 }
               />
 
@@ -428,7 +427,7 @@ function App() {
                 path="/admin/:secret"
                 element={
                   <AdminProtectedRoute>
-                    <AdminLayout />
+                    <AdminLayoutComponent />
                   </AdminProtectedRoute>
                 }
               >

@@ -13,9 +13,52 @@ import {
   TrendingUp,
   Activity,
 } from 'lucide-react';
-import { Progress } from '../ui/progress';
+import { Progress } from '../ui/progress'
+import { useEffect, useState } from 'react';
+import { supabase } from '../../services/supabaseClient';
 
 export default function AdminDashboard() {
+  const [activity,setActivity] = useState<any[]>()
+  const [loginActivity,setLoginActivity] = useState<any[]>([
+    {
+      icon: Users,
+      title: 'New User Registration',
+      description: 'John Smith registered as a professional',
+    },
+    {
+      icon: Briefcase,
+      title: 'Job Posted',
+      description: 'New plumbing job posted in Seattle area',
+      time: '15 minutes ago',
+    },
+    {
+      icon: AlertCircle,
+      title: 'Report Submitted',
+      description: 'User reported inappropriate content',
+      time: '1 hour ago',
+    },
+    {
+      icon: TrendingUp,
+      title: 'Traffic Spike',
+      description: 'Unusual traffic detected from IP range',
+      time: '2 hours ago',
+    },
+  ])
+  async function getActivities(){
+    const { data,error } = await supabase.from('login_activity').select('*');
+    console.log(data,error)
+    if (data) {
+      setActivity(data);
+    }
+  }
+  async function getProfile(id: string){
+    const { data,error } = await supabase.from('profiles').select('email').eq('id',id);
+    console.log(data,error)
+  }
+  useEffect(() => {
+    getActivities();
+    getProfile("e8de659d-00ba-4f4f-8e63-92013e47e41e");
+  },[])
   return (
     <div className="space-y-6">
       <div>
@@ -87,32 +130,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                {
-                  icon: Users,
-                  title: 'New User Registration',
-                  description: 'John Smith registered as a professional',
-                  time: '2 minutes ago',
-                },
-                {
-                  icon: Briefcase,
-                  title: 'Job Posted',
-                  description: 'New plumbing job posted in Seattle area',
-                  time: '15 minutes ago',
-                },
-                {
-                  icon: AlertCircle,
-                  title: 'Report Submitted',
-                  description: 'User reported inappropriate content',
-                  time: '1 hour ago',
-                },
-                {
-                  icon: TrendingUp,
-                  title: 'Traffic Spike',
-                  description: 'Unusual traffic detected from IP range',
-                  time: '2 hours ago',
-                },
-              ].map((item, i) => (
+              {loginActivity.map((item, i) => (
                 <div key={i} className="flex items-center gap-4">
                   <div className="rounded-full p-2 bg-secondary">
                     <item.icon className="h-4 w-4" />

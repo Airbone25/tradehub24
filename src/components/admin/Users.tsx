@@ -9,8 +9,26 @@ import {
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Search, UserPlus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '../../services/supabaseClient';
+
 
 export default function AdminUsers() {
+
+  const [users, setUsers] = useState<any[]>([])
+
+  async function getUsers() {
+    const { data, error } = await supabase.from('profiles').select('*');
+    console.log(data, error);
+    if (data) {
+      setUsers(data);
+    }
+  }
+
+  useEffect(() => {
+    getUsers();
+  },[])
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -46,43 +64,21 @@ export default function AdminUsers() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {[
-              {
-                name: 'John Smith',
-                email: 'john@example.com',
-                role: 'Professional',
-                status: 'Active',
-                joined: '2024-01-15',
-              },
-              {
-                name: 'Sarah Johnson',
-                email: 'sarah@example.com',
-                role: 'Homeowner',
-                status: 'Active',
-                joined: '2024-02-20',
-              },
-              {
-                name: 'Mike Wilson',
-                email: 'mike@example.com',
-                role: 'Professional',
-                status: 'Pending',
-                joined: '2024-03-01',
-              },
-            ].map((user, i) => (
+            {users.map((user, i) => (
               <TableRow key={i}>
-                <TableCell className="font-medium">{user.name}</TableCell>
+                <TableCell className="font-medium">{user.first_name} {user.last_name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
+                <TableCell>{user.user_type}</TableCell>
                 <TableCell>
                   <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                    user.status === 'Active' 
+                    user.confirmed === true 
                       ? 'bg-green-50 text-green-700' 
                       : 'bg-yellow-50 text-yellow-700'
                   }`}>
-                    {user.status}
+                    {user.confirmed.toString()}
                   </span>
                 </TableCell>
-                <TableCell>{user.joined}</TableCell>
+                <TableCell>{user.created_at}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm">Edit</Button>
                 </TableCell>

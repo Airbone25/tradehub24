@@ -18,11 +18,13 @@ import {
 } from '../ui/dropdown-menu';
 import { Input } from '../ui/input';
 
+const adminSecret = import.meta.env.VITE_ADMIN_SECRET;
+
 const navItems = [
-  { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/admin/users', icon: Users, label: 'Users' },
-  { to: '/admin/jobs', icon: Briefcase, label: 'Jobs' },
-  { to: '/admin/settings', icon: Settings, label: 'Settings' },
+  { to: `/admin/${adminSecret}`, icon: LayoutDashboard, label: 'Dashboard' },
+  { to: `/admin/${adminSecret}/users`, icon: Users, label: 'Users' },
+  { to: `/admin/${adminSecret}/jobs`, icon: Briefcase, label: 'Jobs' },
+  { to: `/admin/${adminSecret}/settings`, icon: Settings, label: 'Settings' },
 ];
 
 export default function AdminLayout() {
