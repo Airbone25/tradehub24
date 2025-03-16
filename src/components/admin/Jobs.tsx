@@ -9,8 +9,36 @@ import {
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '../../services/supabaseClient';
 
 export default function AdminJobs() {
+  const [jobs, setJobs] = useState<any[]>([])
+
+  const [users, setUsers] = useState<any[]>([])
+
+  async function getUsers(id: string) {
+      const { data, error } = await supabase.from('profiles').select('email').eq('id', id).single();
+      console.log(data, error);
+      if (data) {
+        setJobs((jobs) => [...jobs, { email: data.email }]);
+      }
+  }
+
+  async function getJobs(){
+    const { data,error } = await supabase.from('jobs').select('*').setHeader("x-user-role",localStorage.getItem("role") || "defaultRole");
+    console.log(data,error)
+    data?.forEach((e)=>getUsers(e.homeowner_id))
+    if (data) {
+      setJobs(data);
+      console.log(jobs)
+    }
+  }
+
+  useEffect(() => {
+    getJobs();
+  },[])
+
   return (
     <div className="space-y-6">
       <div>
@@ -32,46 +60,20 @@ export default function AdminJobs() {
           <TableHeader>
             <TableRow>
               <TableHead>Title</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Location</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Created At</TableHead>
               <TableHead>Posted By</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Posted Date</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {[
-              {
-                title: 'Bathroom Renovation',
-                category: 'Plumbing',
-                location: 'Seattle, WA',
-                postedBy: 'John Smith',
-                status: 'Active',
-                postedDate: '2024-03-01',
-              },
-              {
-                title: 'Kitchen Remodel',
-                category: 'General Contractor',
-                location: 'Portland, OR',
-                postedBy: 'Sarah Johnson',
-                status: 'Completed',
-                postedDate: '2024-02-15',
-              },
-              {
-                title: 'Roof Repair',
-                category: 'Roofing',
-                location: 'Vancouver, WA',
-                postedBy: 'Mike Wilson',
-                status: 'Pending',
-                postedDate: '2024-03-05',
-              },
-            ].map((job, i) => (
+            {jobs.map((job, i) => (
               <TableRow key={i}>
                 <TableCell className="font-medium">{job.title}</TableCell>
-                <TableCell>{job.category}</TableCell>
-                <TableCell>{job.location}</TableCell>
-                <TableCell>{job.postedBy}</TableCell>
+                <TableCell>{job.description}</TableCell>
+                <TableCell>{job.created_at}</TableCell>
+                <TableCell>{job.homeowner_id}</TableCell>
                 <TableCell>
                   <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                     job.status === 'Active' 

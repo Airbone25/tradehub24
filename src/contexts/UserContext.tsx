@@ -151,12 +151,14 @@ const createProfile = async (
 
 // Helper: Fetch profile from the profiles table.
 const fetchProfile = async (userId: string): Promise<UserProfile | null> => {
+  console.log('fetchProfile called with userId:', userId);
   try {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
+      console.log('fetchProfile', data, error);
     if (error) {
       console.error('Error fetching profile:', error);
       return null;
@@ -183,6 +185,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('Session:', session);
         if (sessionError) throw sessionError;
         if (session?.user) {
           console.log('Session found for user:', session.user.id);
@@ -547,12 +550,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               console.error('Error inserting into professionals table:', proError);
             } else {
               console.log('Professional record created:', data);
+              setUser(data[0] as AuthUser)
             }
           }
           
           // Send confirmation emails
-          await sendConfirmationEmail(email.toLowerCase(), userType);
-          await sendWelcomeEmail(email.toLowerCase(), userType);
+          // await sendConfirmationEmail(email.toLowerCase(), userType);
+          // await sendWelcomeEmail(email.toLowerCase(), userType);
           
           setUserTypeState(userType);
           localStorage.setItem('lastUserType', userType);

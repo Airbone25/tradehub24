@@ -12,23 +12,31 @@ const HomeownerLoginOTP: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isCallback = location.pathname.includes('callback');
+  const isCallback = location.pathname.includes('login-otp-callback');
+
+  // useEffect(() => {
+  //   if (location.state?.email) {
+  //     setEmail(location.state.email);
+  //   }
+  // }, [location.state]);
 
   useEffect(() => {
     if (location.state?.email) {
       setEmail(location.state.email);
     }
-  }, [location.state]);
-
-  useEffect(() => {
     // Handle OTP callback
+    console.log('Is callback:', isCallback);
+    
     if (isCallback) {
       setLoading(true);
       (async () => {
         try {
           const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          console.log('Hash params:', hashParams);
           const accessToken = hashParams.get('access_token');
           const refreshToken = hashParams.get('refresh_token');
+          console.log('Access token:', accessToken);
+          console.log('Refresh token:', refreshToken);
           if (accessToken && refreshToken) {
             const { error } = await supabase.auth.setSession({
               access_token: accessToken,
@@ -36,8 +44,9 @@ const HomeownerLoginOTP: React.FC = () => {
             });
             if (error) throw error;
 
-            // Check user type
+            //Check user type
             const { data: { user } } = await supabase.auth.getUser();
+            console.log('User data:', user);
             if (user?.user_metadata?.user_type !== 'homeowner') {
               await supabase.auth.signOut();
               throw new Error('Access denied: you are not a homeowner');
@@ -52,7 +61,7 @@ const HomeownerLoginOTP: React.FC = () => {
         }
       })();
     }
-  }, [isCallback, navigate]);
+  }, [isCallback, navigate,location.state]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +70,7 @@ const HomeownerLoginOTP: React.FC = () => {
 
     try {
       const { exists, userType } = await checkIfEmailExists(email);
+      console.log('Email exists:', exists, userType);
       if (!exists) {
         navigate('/homeowner/signup', {
           state: { email, message: 'Account not found. Please sign up.' },

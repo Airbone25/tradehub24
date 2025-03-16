@@ -17,4 +17,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
   },
+  global: {
+    headers: {
+      "x-user-role": localStorage.getItem("role") || "user",
+    }
+  }
 });
