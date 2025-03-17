@@ -108,10 +108,10 @@ export default function AdminSettings() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-4">
+        {/* <div className="flex justify-end gap-4">
           <Button variant="outline">Reset to Defaults</Button>
           <Button>Save Changes</Button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

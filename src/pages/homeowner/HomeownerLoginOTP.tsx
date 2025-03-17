@@ -12,7 +12,7 @@ const HomeownerLoginOTP: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isCallback = location.pathname.includes('login-otp-callback');
+  const isCallback = location.pathname.includes('dashboard');
 
   // useEffect(() => {
   //   if (location.state?.email) {
@@ -84,7 +84,7 @@ const HomeownerLoginOTP: React.FC = () => {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/homeowner/login-otp-callback`,
+          emailRedirectTo: `${window.location.origin}/homeowner/dashboard`,
           data: { user_type: 'homeowner' },
         },
       });
