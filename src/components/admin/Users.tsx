@@ -11,11 +11,13 @@ import { Input } from '../ui/input';
 import { Search, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabaseClient';
+import UserModal from './modals/UserModal';
 
 
 export default function AdminUsers() {
 
   const [users, setUsers] = useState<any[]>([])
+  const [isModal,setIsModal] = useState<boolean>(false)
 
   async function getUsers() {
     const { data, error } = await supabase.from('profiles').select('*');
@@ -38,11 +40,13 @@ export default function AdminUsers() {
             Manage user accounts and permissions
           </p>
         </div>
-        <Button>
+        <Button onClick={()=>setIsModal(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           Add User
         </Button>
       </div>
+
+      
 
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-sm">
@@ -66,9 +70,9 @@ export default function AdminUsers() {
           <TableBody>
             {users.map((user, i) => (
               <TableRow key={i}>
-                <TableCell className="font-medium">{user.first_name} {user.last_name}</TableCell>
+                <TableCell className="font-medium">{user.firstName} {user.lastName}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.user_type}</TableCell>
+                <TableCell>{user.userType}</TableCell>
                 <TableCell>
                   <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                     user.confirmed === true 
@@ -87,6 +91,7 @@ export default function AdminUsers() {
           </TableBody>
         </Table>
       </div>
+      <UserModal isOpen={isModal} onClose={()=>setIsModal(false)}/>
     </div>
   );
 }

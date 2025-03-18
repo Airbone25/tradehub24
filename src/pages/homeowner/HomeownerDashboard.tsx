@@ -122,18 +122,29 @@ const HomeownerDashboard: React.FC = () => {
         // 4. Fetch recent messages (with sender)
         //    'sender:profiles!sender_id(...)' can return an array if there's more than one match,
         //    so we'll transform that as well.
+        // const { data: messagesData, error: messagesError } = await supabase
+        //   .from('messages')
+        //   .select(`
+        //     id,
+        //     sender_id,
+        //     content,
+        //     created_at,
+        //     sender:profiles!sender_id(
+        //       first_name,
+        //       last_name,
+        //       avatar_url
+        //     )
+        //   `)
+        //   .eq('receiver_id', user.id)
+        //   .order('created_at', { ascending: false })
+        //   .limit(5);
         const { data: messagesData, error: messagesError } = await supabase
           .from('messages')
           .select(`
             id,
             sender_id,
             content,
-            created_at,
-            sender:profiles!sender_id(
-              first_name,
-              last_name,
-              avatar_url
-            )
+            created_at
           `)
           .eq('receiver_id', user.id)
           .order('created_at', { ascending: false })

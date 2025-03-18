@@ -11,9 +11,11 @@ import { Input } from '../ui/input';
 import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabaseClient';
+import JobModal from './modals/JobModal';
 
 export default function AdminJobs() {
   const [jobs, setJobs] = useState<any[]>([])
+  const [isModal,setIsModal] = useState<boolean>(false)
 
   const [users, setUsers] = useState<any[]>([])
 
@@ -28,7 +30,7 @@ export default function AdminJobs() {
   async function getJobs(){
     const { data,error } = await supabase.from('jobs').select('*').setHeader("x-user-role",localStorage.getItem("role") || "defaultRole");
     console.log(data,error)
-    data?.forEach((e)=>getUsers(e.homeowner_id))
+    // data?.forEach((e)=>getUsers(e.homeowner_id))
     if (data) {
       setJobs(data);
       console.log(jobs)
@@ -41,11 +43,16 @@ export default function AdminJobs() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex justify-between items-center">
+        <div>
         <h1 className="text-3xl font-bold tracking-tight">Jobs</h1>
         <p className="text-muted-foreground">
           Monitor and manage job postings
         </p>
+        </div>
+        <Button onClick={(e)=>setIsModal(true)}>
+          Add Job
+        </Button>
       </div>
 
       <div className="flex items-center gap-4">
@@ -64,7 +71,7 @@ export default function AdminJobs() {
               <TableHead>Created At</TableHead>
               <TableHead>Posted By</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -85,15 +92,16 @@ export default function AdminJobs() {
                     {job.status}
                   </span>
                 </TableCell>
-                <TableCell>{job.postedDate}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">View</Button>
+                {/* <TableCell>{job.postedDate}</TableCell> */}
+                <TableCell>
+                  <Button variant="ghost" size="sm">Edit</Button>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+      <JobModal isOpen={isModal} onClose={()=>setIsModal(false)}/>
     </div>
   );
 }

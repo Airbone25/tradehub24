@@ -555,8 +555,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           }
           
           // Send confirmation emails
-          // await sendConfirmationEmail(email.toLowerCase(), userType);
-          // await sendWelcomeEmail(email.toLowerCase(), userType);
+          await sendConfirmationEmail(email.toLowerCase(), userType);
+          await sendWelcomeEmail(email.toLowerCase(), userType);
           
           setUserTypeState(userType);
           localStorage.setItem('lastUserType', userType);
