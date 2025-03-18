@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useParams, Outlet } f
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useIdleTimer } from './hooks/useIdleTimer';
-
+import { HelmetProvider } from 'react-helmet-async';
 import { UserProvider } from './contexts/UserContext';
 import { Layout } from './components/Layout';
 import TestConnection from './components/TestConnection';
@@ -127,6 +127,7 @@ function App() {
   useIdleTimer({ timeout: 30 * 60_000 });
 
   return (
+    <HelmetProvider>
     <ThemeProvider defaultTheme="light">
       <Router>
         <UserProvider>
@@ -442,6 +443,7 @@ function App() {
       </Router>
       <Toaster />
     </ThemeProvider>
+    </HelmetProvider>
   );
 }
 

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { supabase } from "../../../services/supabaseClient";
-import { Helmet } from "react-helmet-async";
 
 interface UserModalProps {
   isOpen: boolean;
@@ -18,11 +17,11 @@ interface UserModalProps {
 // }
 
 export default function UserModal({ isOpen, onClose }: UserModalProps) {
-  const [firstName,setFirstName] = useState("")
-  const [lastName,setLastName] = useState("")
+  const [first_name,setFirstName] = useState("")
+  const [last_name,setLastName] = useState("")
   const [email,setEmail] = useState("")
-  const [userType,setUserType] = useState("")
-  const [postCode,setPostCode] = useState("")
+  const [user_type,setUserType] = useState("")
+  const [postcode,setPostCode] = useState("")
   const [phone,setPhone] = useState("")
 
   async function postUser(formdata: any) {
@@ -37,8 +36,8 @@ export default function UserModal({ isOpen, onClose }: UserModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form Submitted:", {firstName,lastName,email,userType,confirmed:true,postCode,phone});
-    postUser({firstName,lastName,email,userType,confirmed:true,postCode,phone,created_at: new Date().toISOString()})
+    console.log("Form Submitted:", {first_name,last_name,email,user_type,confirmed:true,postcode,phone});
+    postUser({first_name,last_name,email,user_type,confirmed:true,postcode,phone,created_at: new Date().toISOString()})
     onClose();
   };
 
@@ -54,7 +53,7 @@ export default function UserModal({ isOpen, onClose }: UserModalProps) {
               type="text"
               name="first_name"
               placeholder="First Name"
-              value={firstName}
+              value={first_name}
               onChange={(e)=>setFirstName(e.target.value)}
               className="border p-2 w-1/2 rounded-md"
               required
@@ -63,7 +62,7 @@ export default function UserModal({ isOpen, onClose }: UserModalProps) {
               type="text"
               name="last_name"
               placeholder="Last Name"
-              value={lastName}
+              value={last_name}
               onChange={(e)=>setLastName(e.target.value)}
               className="border p-2 w-1/2 rounded-md"
               required
@@ -80,11 +79,12 @@ export default function UserModal({ isOpen, onClose }: UserModalProps) {
           />
           <select
             name="user_type"
-            value={userType}
+            value={user_type}
             onChange={(e)=>setUserType(e.target.value)}
             className="border p-2 w-full rounded-md"
             required
           >
+            <option value="">Select User Type</option>
             <option value="homeowner">Homeowner</option>
             <option value="professional">Professional</option>
           </select>
@@ -92,7 +92,7 @@ export default function UserModal({ isOpen, onClose }: UserModalProps) {
             type="text"
             name="postcode"
             placeholder="Postcode"
-            value={postCode}
+            value={postcode}
             onChange={(e)=>setPostCode(e.target.value)}
             className="border p-2 w-full rounded-md"
             required
