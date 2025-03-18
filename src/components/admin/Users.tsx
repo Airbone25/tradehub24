@@ -12,6 +12,7 @@ import { Search, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import UserModal from './modals/UserModal';
+import { Helmet } from "react-helmet-async";
 
 
 export default function AdminUsers() {

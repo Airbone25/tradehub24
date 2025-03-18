@@ -12,6 +12,7 @@ import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import JobModal from './modals/JobModal';
+import { Helmet } from "react-helmet-async";
 
 export default function AdminJobs() {
   const [jobs, setJobs] = useState<any[]>([])

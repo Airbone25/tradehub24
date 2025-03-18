@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { Input } from '../ui/input';
+import { Helmet } from "react-helmet-async";
 
 const adminSecret = import.meta.env.VITE_ADMIN_SECRET;
 
@@ -34,8 +35,11 @@ export default function AdminLayout() {
       <header className="border-b">
         <div className="flex h-16 items-center px-4 gap-4">
           <div className="flex items-center gap-2 flex-1">
-            <img src="/logo.svg" alt="TradeHub24" className="h-8" />
-            <span className="text-xl font-bold text-primary">Admin Portal</span>
+            {/* <img src="/logo.svg" alt="TradeHub24" className="h-8" /> */}
+            <span className="text-3xl font-bold">
+              <span className="text-[#ec284c]">Admin </span> 
+              <span className="text-[#0f63a7]">Portal</span>
+            </span>
           </div>
           
           <div className="flex items-center gap-4">

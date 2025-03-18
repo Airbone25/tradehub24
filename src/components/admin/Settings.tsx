@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from '../ui/card';
 import { Switch } from '../ui/switch';
+import { Helmet } from "react-helmet-async";
 
 export default function AdminSettings() {
   return (
