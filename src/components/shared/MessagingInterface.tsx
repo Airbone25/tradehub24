@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
 import { sendMessage, getConversation } from '../../services/messagingService';
+import { Helmet } from "react-helmet-async";
 
 type Message = {
   id: string;
