@@ -1,22 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../../services/supabaseClient";
 
 interface UserModalProps {
   isOpen: boolean;
   onClose: () => void;
+  id: string;
 }
 
-// interface FormData {
-//   first_name: string;
-//   last_name: string;
-//   email: string;
-//   user_type: "homeowner" | "professional";
-//   postcode: string;
-//   phone: string;
-//   password: string;
-// }
-
-export default function UserModal({ isOpen, onClose }: UserModalProps) {
+export default function UserModal({ isOpen, onClose, id }: UserModalProps) {
   const [first_name,setFirstName] = useState("")
   const [last_name,setLastName] = useState("")
   const [email,setEmail] = useState("")
@@ -24,20 +15,42 @@ export default function UserModal({ isOpen, onClose }: UserModalProps) {
   const [postcode,setPostCode] = useState("")
   const [phone,setPhone] = useState("")
 
-  async function postUser(formdata: any) {
-    const {data,error} = await supabase.from('profiles').insert(formdata)
-    if(error){
-      console.error(error)
+  async function getUser(id: string) {
+    const { data, error } = await supabase.from('profiles').select().eq('id',id);
+    if (data) {
+      const user = data[0];
+      console.log(user);
+      setFirstName(user.first_name);
+      setLastName(user.last_name);
+      setEmail(user.email);
+      setUserType(user.user_type);
+      setPostCode(user.postcode);
+      setPhone(user.phone);
     }
-    if(data){
-      console.log({message: "success",data})
+    if (error) {
+      console.error(error);
     }
   }
 
+  async function updateUser(id: string, formdata: any) {
+    const { data, error } = await supabase.from('profiles').update(formdata).eq('id',id).select();
+    if (error) {
+      console.error(error);
+    }
+    if (data) {
+      console.log({message: "success",data});
+    }
+  }
+
+  useEffect(() => {
+    if (id) {
+      getUser(id);
+    }
+  }, [id]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form Submitted:", {first_name,last_name,email,user_type,confirmed:true,postcode,phone});
-    postUser({first_name,last_name,email,user_type,confirmed:true,postcode,phone,created_at: new Date().toISOString()})
+    updateUser(id,{first_name,last_name,email,user_type,postcode,phone,updated_at: new Date().toISOString()})
     onClose();
   };
 
@@ -46,7 +59,7 @@ export default function UserModal({ isOpen, onClose }: UserModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4">Add User</h2>
+        <h2 className="text-xl font-semibold mb-4">Update User</h2>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="flex gap-2">
             <input

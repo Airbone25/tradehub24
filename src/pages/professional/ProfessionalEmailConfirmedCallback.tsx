@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
+import { toast } from 'react-toastify';
 
 const ProfessionalEmailConfirmedCallback: React.FC = () => {
   const navigate = useNavigate();
@@ -24,15 +25,18 @@ const ProfessionalEmailConfirmedCallback: React.FC = () => {
 
           // Double-check the user type
           const { data: { user } } = await supabase.auth.getUser();
+          console.log('User data:', user?.user_metadata?.user_type);
           if (user?.user_metadata?.user_type === 'professional') {
             // Instead of going to the dashboard, redirect to professional login page
-            navigate('/professional/login');
+            navigate('/professional/registration-step2');
           } else {
             // If user_type is not professional, fallback
+            toast.error('Not Professional user. Please try again.');
             navigate('/');
           }
         } else {
           // No tokens found => fallback to professional login page
+          toast.error('Failed to confirm your email. Please try again.');
           navigate('/professional/login');
         }
       } catch (err: Error | unknown) {

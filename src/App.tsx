@@ -107,6 +107,7 @@ function AdminProtectedRoute({ children }: { children: JSX.Element }) {
   const adminSecret = import.meta.env.VITE_ADMIN_SECRET;
   localStorage.setItem('role','admin')
   if (secret !== adminSecret) {
+    localStorage.setItem('role','user')
     return <Navigate to="/" replace />;
   }
   return children;
@@ -125,6 +126,7 @@ const AdminLayout = () => {
 function App() {
   // Auto-logout after 30 minutes of inactivity
   useIdleTimer({ timeout: 30 * 60_000 });
+  localStorage.setItem('role','user')
 
   return (
     <ThemeProvider defaultTheme="light">
@@ -402,23 +404,25 @@ function App() {
               <Route
                 path="/professional/registration-step2"
                 element={
+                  <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
                     <ProfessionalRegistrationStep2 />
+                  </ProtectedRoute>
                 }
               />
               <Route
                 path="/professional/registration-step3"
                 element={
-                  // <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
+                  <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
                     <ProfessionalRegistrationStep3 />
-                  // </ProtectedRoute>
+                  </ProtectedRoute>
                 }
               />
               <Route
                 path="/professional/registration-step4"
                 element={
-                  // <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
+                  <ProtectedRoute requiredUserType="professional" redirectTo="/professional/signup">
                     <ProfessionalRegistrationStep4 />
-                  // </ProtectedRoute>
+                  </ProtectedRoute>
                 }
               />
 

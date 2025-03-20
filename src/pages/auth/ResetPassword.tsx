@@ -33,14 +33,15 @@ const ResetPassword: React.FC = () => {
       }
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/${existingUserType || userType || 'auth'}/update-password`,
+        // redirectTo: `${window.location.origin}/${existingUserType || userType || 'auth'}/update-password`,
+        redirectTo: `${window.location.origin}/auth/update-password`,
       });
       
       if (error) throw error;
       
-      toast.success('If an account exists with this email, a password reset link has been sent.');
+      toast.success('Email Sent');
     } catch (err: any) {
-      toast.success('If an account exists with this email, a password reset link has been sent.');
+      toast.success('Error Occured');
       console.error('Password reset error:', err);
     } finally {
       setLoading(false);

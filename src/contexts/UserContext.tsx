@@ -472,7 +472,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const redirectUrl =
         userType === 'homeowner'
           ? `${window.location.origin}/homeowner/email-confirmed`
-          : `${window.location.origin}/professional/email-confirmed`;
+          : `${window.location.origin}/professional/registration-step2`;
           
       console.log('Signing up user with email:', email, 'and userType:', userType);
       

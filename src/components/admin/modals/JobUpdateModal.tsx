@@ -1,20 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../../services/supabaseClient";
 
 interface UserModalProps {
   isOpen: boolean;
   onClose: () => void;
+  id: string;
 }
 
-export default function JobModal({ isOpen, onClose }: UserModalProps) {
+export default function JobUpdateModal({ isOpen, onClose, id }: UserModalProps) {
   const [homeowner_id,sethomeownerid] = useState("")
   const [title,settitle] = useState("")
   const [description,setDescription] = useState("")
   const [status,setStatus] = useState("")
   const [bids,setbids] = useState("")
 
-  async function postJob(formdata: any) {
-    const {data,error} = await supabase.from('jobs').insert(formdata)
+  async function getJob(id: string) {
+    const { data, error } = await supabase.from('jobs').select().eq('id',id);
+    if (data) {
+      const job = data[0];
+      console.log(job);
+      sethomeownerid(job.homeowner_id);
+      settitle(job.title);
+      setDescription(job.description);
+      setStatus(job.status);
+      setbids(job.bids);
+    }
+    if (error) {
+      console.error(error);
+    }
+  }
+
+  async function updateJob(id: string,formdata: any) {
+    const {data,error} = await supabase.from('jobs').update(formdata).eq('id',id).select();
     if(error){
       console.error(error)
     }
@@ -26,9 +43,15 @@ export default function JobModal({ isOpen, onClose }: UserModalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Form Submitted:", {homeowner_id,title,description,status,bids});
-    postJob({homeowner_id,title,description,status,bids,created_at: new Date().toISOString()})
+    updateJob(id,{homeowner_id,title,description,status,bids})
     onClose();
   };
+
+  useEffect(() => {
+    if (id) {
+      getJob(id);
+    }
+  }, [id]);
 
   if (!isOpen) return null;
 

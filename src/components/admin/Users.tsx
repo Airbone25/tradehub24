@@ -8,28 +8,41 @@ import {
 } from '../ui/table';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Search, UserPlus } from 'lucide-react';
+import { Search, UserPlus,Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import UserModal from './modals/UserModal';
-
+import UserUpdateModal from './modals/UserUpdateModal';
 
 export default function AdminUsers() {
 
   const [users, setUsers] = useState<any[]>([])
   const [isModal,setIsModal] = useState<boolean>(false)
+  const [isUpdateModal,setIsUpdateModal] = useState<boolean>(false)
+  const [id,setId] = useState<string>("")
 
   async function getUsers() {
     const { data, error } = await supabase.from('profiles').select('*');
-    console.log(data, error);
+    console.log(data);
     if (data) {
       setUsers(data);
+    }
+    if (error) {
+      console.error(error)
+    }
+  }
+
+  async function deleteUser(id: string) {
+    const { data, error } = await supabase.from('profiles').delete().eq('id',id);
+    console.log(data, error);
+    if (data) {
+      setUsers(users.filter((user)=>user.id !== id))
     }
   }
 
   useEffect(() => {
     getUsers();
-  },[])
+  },[users])
 
   return (
     <div className="space-y-6">
@@ -64,15 +77,15 @@ export default function AdminUsers() {
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Joined</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.map((user, i) => (
               <TableRow key={i}>
-                <TableCell className="font-medium">{user.firstName} {user.lastName}</TableCell>
+                <TableCell className="font-medium">{user.first_name} {user.last_name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.userType}</TableCell>
+                <TableCell>{user.user_type}</TableCell>
                 <TableCell>
                   <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                     user.confirmed === true 
@@ -83,8 +96,13 @@ export default function AdminUsers() {
                   </span>
                 </TableCell>
                 <TableCell>{user.created_at}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">Edit</Button>
+                <TableCell className="text-center">
+                  <Button onClick={()=>{setIsUpdateModal(true)
+                    setId(user.id)
+                  }} variant="ghost" size="sm">Edit</Button>
+                  <Button onClick={()=>deleteUser(user.id)} variant="ghost" size="sm">
+                    <Trash className="h-4 w-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -92,6 +110,7 @@ export default function AdminUsers() {
         </Table>
       </div>
       <UserModal isOpen={isModal} onClose={()=>setIsModal(false)}/>
+      <UserUpdateModal isOpen={isUpdateModal} onClose={()=>setIsUpdateModal(false)} id={id}/>
     </div>
   );
 }

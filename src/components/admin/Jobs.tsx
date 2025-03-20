@@ -8,24 +8,28 @@ import {
 } from '../ui/table';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Search } from 'lucide-react';
+import { Search,Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import JobModal from './modals/JobModal';
+import JobUpdateModal from './modals/JobUpdateModal';
 
 export default function AdminJobs() {
   const [jobs, setJobs] = useState<any[]>([])
   const [isModal,setIsModal] = useState<boolean>(false)
 
-  const [users, setUsers] = useState<any[]>([])
+  const [isUpdateModal,setIsUpdateModal] = useState<boolean>(false)
+  const [id,setId] = useState<string>("")
 
-  async function getUsers(id: string) {
-      const { data, error } = await supabase.from('profiles').select('email').eq('id', id).single();
-      console.log(data, error);
-      if (data) {
-        setJobs((jobs) => [...jobs, { email: data.email }]);
-      }
-  }
+  // const [users, setUsers] = useState<any[]>([])
+
+  // async function getUsers(id: string) {
+  //     const { data, error } = await supabase.from('profiles').select('email').eq('id', id).single();
+  //     console.log(data, error);
+  //     if (data) {
+  //       setJobs((jobs) => [...jobs, { email: data.email }]);
+  //     }
+  // }
 
   async function getJobs(){
     const { data,error } = await supabase.from('jobs').select('*').setHeader("x-user-role",localStorage.getItem("role") || "defaultRole");
@@ -37,9 +41,17 @@ export default function AdminJobs() {
     }
   }
 
+  async function deleteJob(id: string) {
+    const { data, error } = await supabase.from('jobs').delete().eq('id',id);
+    console.log(data, error);
+    if (data) {
+      setJobs(jobs.filter((job)=>job.id !== id))
+    }
+  }
+
   useEffect(() => {
     getJobs();
-  },[])
+  },[jobs])
 
   return (
     <div className="space-y-6">
@@ -50,7 +62,7 @@ export default function AdminJobs() {
           Monitor and manage job postings
         </p>
         </div>
-        <Button onClick={(e)=>setIsModal(true)}>
+        <Button onClick={()=>setIsModal(true)}>
           Add Job
         </Button>
       </div>
@@ -71,7 +83,7 @@ export default function AdminJobs() {
               <TableHead>Created At</TableHead>
               <TableHead>Posted By</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead className='text-center'>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -93,8 +105,12 @@ export default function AdminJobs() {
                   </span>
                 </TableCell>
                 {/* <TableCell>{job.postedDate}</TableCell> */}
-                <TableCell>
-                  <Button variant="ghost" size="sm">Edit</Button>
+                <TableCell className='text-center'>
+                  <Button variant="ghost" size="sm" onClick={()=>{
+                    setIsUpdateModal(true)
+                    setId(job.id)
+                  }}>Edit</Button>
+                  <Button variant="ghost" size="sm" onClick={()=>deleteJob(job.id)}><Trash className="h-4 w-4" /></Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -102,6 +118,7 @@ export default function AdminJobs() {
         </Table>
       </div>
       <JobModal isOpen={isModal} onClose={()=>setIsModal(false)}/>
+      <JobUpdateModal isOpen={isUpdateModal} onClose={()=>setIsUpdateModal(false)} id={id}/>
     </div>
   );
 }

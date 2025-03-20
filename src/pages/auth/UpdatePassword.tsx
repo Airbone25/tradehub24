@@ -2,10 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const UpdatePassword: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     // If user arrived with #access_token, supabase sets session automatically.
@@ -19,7 +22,11 @@ const UpdatePassword: React.FC = () => {
         password: newPassword,
       });
       if (error) throw error;
-      toast.success('Password updated! You can now log in.');
+      if (user) {
+        toast.success('Password updated! You can now log in.');
+        navigate(`/`)
+        await supabase.auth.signOut();
+      }
     } catch (err: any) {
       toast.error(err.message || 'Failed to update password');
     } finally {

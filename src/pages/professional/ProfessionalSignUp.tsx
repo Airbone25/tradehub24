@@ -41,7 +41,6 @@ const ProfessionalSignUp = () => {
       last_name: formData.lastName,
       phone: formData.phone,
       postcode: formData.postcode,
-      // Company-related fields could be updated later via profile update.
     });
 
     if (!response.success) {

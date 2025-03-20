@@ -150,7 +150,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-3">
+        {/* <Card className="col-span-3">
           <CardHeader>
             <CardTitle>System Status</CardTitle>
             <CardDescription>
@@ -177,7 +177,7 @@ export default function AdminDashboard() {
               ))}
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );
